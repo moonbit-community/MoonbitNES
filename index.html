@@ -1,0 +1,27 @@
+<!--
+SPDX-License-Identifier: MIT
+Copyright (c) 2024 Liu Rujia, International Digital Economy Academy
+-->
+<!DOCTYPE html>
+<html lang="en">
+
+<body>
+  <a id="download" style="display: none;">Preparing</a>
+  <input id="upload" type="file" accept=".nes">
+  <div id="canvas" style="margin: auto; width: 75%;">
+    <canvas id="nes-canvas" width="256" height="240"></canvas>
+  </div>
+  <table id="keys">
+    <tr><td><label>Up</label></td><td><kbd>↑</kbd>/<kbd>W</kbd></td></tr>
+    <tr><td><label>Down</label></td><td><kbd>↓</kbd>/<kbd>S</kbd></td></tr>
+    <tr><td><label>Left</label></td><td><kbd>←</kbd>/<kbd>A</kbd></td></tr>
+    <tr><td><label>Right</label></td><td><kbd>→</kbd>/<kbd>D</kbd></td></tr>
+    <tr><td><label>A</label></td><td><kbd>K</kbd></td></tr>
+    <tr><td><label>B</label></td><td><kbd>J</kbd></td></tr>
+    <tr><td><label>Start</label></td><td><kbd>Enter</kbd>/<kbd>I</kbd></td></tr>
+    <tr><td><label>Select</label></td><td><kbd>Tab</kbd>/<kbd>L</kbd></td></tr>
+  </table>
+  <script type="module" src="./main.mjs"></script>
+</body>
+
+</html>

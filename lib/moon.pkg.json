@@ -1,0 +1,26 @@
+{
+  "link": {
+    "wasm-gc": {
+      "exports": [
+        "nestest_extern:nestest",
+        "load_rom_extern:load_rom",
+        "run",
+        "buttonDown",
+        "buttonUp",
+        "run_with_logging"
+      ]
+    },
+    "js": {
+      "exports": [
+        "nestest",
+        "load_rom",
+        "run",
+        "buttonDown",
+        "buttonUp",
+        "run_with_logging",
+        "set_image_data",
+        "set_callback"
+      ]
+    }
+  }
+}

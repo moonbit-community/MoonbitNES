@@ -1,0 +1,4 @@
+target/
+roms/
+.mooncakes/
+.moonbit-lsp.json
