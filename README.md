@@ -1,13 +1,13 @@
-# MoonbitNES: NES emulator and playground in Moonbit
+# MoonBitNES: NES emulator and playground in MoonBit
 
-This projects started as a personal experiment for the Moonbit language in Oct. 2023 and luckily became a showcase in IDEA conference in Nov. 2023.
+This projects started as a personal experiment for the MoonBit language in Oct. 2023 and luckily became a showcase in IDEA conference in Nov. 2023.
 
 Based on Dennis Felsing's Exellent [nimes](https://github.com/def-/nimes), which itself is based on fogleman's excellent [NES emulator in
 Go](https://github.com/fogleman/nes).
 
 Compared to the nim/go versions, this version implements enough [unofficial opcodes](https://www.nesdev.org/wiki/CPU_unofficial_opcodes) to pass the `nestest` suggested in [nesdev wiki](https://www.nesdev.org/wiki/Emulator_tests).
 
-This version is very different (changed ~800 lines) from the original version because Moonbit has evolved a loooot since then. At that time, there was no `for` loops, no pipes, and we can define methods for built-in types etc.
+This version is very different (changed ~800 lines) from the original version because MoonBit has evolved a loooot since then. At that time, there was no `for` loops, no pipes, and we can define methods for built-in types etc.
 
 We make it open-source to encourage people mess with it. PRs are welcome!
 
