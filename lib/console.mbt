@@ -14,7 +14,7 @@ struct NES {
 }
 
 fn NES::new(data : Array[Int]) -> NES {
-  let controllers = [Controller::new(), Controller::new()]
+  let controllers = Array::[Controller::new(), Controller::new()]
   let nes : NES = {
     cpu: initCPU(),
     ppu: initPPU(),

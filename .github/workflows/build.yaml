@@ -1,6 +1,6 @@
 on:
     schedule:
-        - cron: '* * * * 2'
+        - cron: '0 10 * * 2'
     pull_request:
 
 jobs:
