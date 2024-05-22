@@ -8,7 +8,8 @@
         "buttonDown",
         "buttonUp",
         "run_with_logging"
-      ]
+      ],
+      "export-memory-name": "moonbit.memory"
     },
     "js": {
       "exports": [

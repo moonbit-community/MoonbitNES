@@ -94,16 +94,16 @@ let resolution : (Int, Int) = (256, 240)
 
 fn Picture::new() -> Picture {
   {
-    pixels: @array.new(
+    pixels: @array.new_with_index(
       resolution.1,
-      fn() { Array::make(resolution.0, Color(0)) },
+      fn(_i) { Array::make(resolution.0, Color(0)) },
     ),
   }
 }
 
 // len=0x40
 fn initPalette() -> Array[Color] {
-  let cs = Array::[
+  let cs = [
     0x666666, 0x002A88, 0x1412A7, 0x3B00A4, 0x5C007E, 0x6E0040, 0x6C0600, 0x561D00,
     0x333500, 0x0B4800, 0x005200, 0x004F08, 0x00404D, 0x000000, 0x000000, 0x000000,
     0xADADAD, 0x155FD9, 0x4240FF, 0x7527FE, 0xA01ACC, 0xB71E7B, 0xB53120, 0x994E00,
