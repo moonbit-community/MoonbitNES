@@ -226,7 +226,7 @@ fn readUInt8(self : MemoryReader) -> UInt8 {
 }
 
 fn readUInt8Array(self : MemoryReader, cnt : Int) -> Array[UInt8] {
-  let result = @array.new_with_index(
+  let result = Array::new_with_index(
     cnt,
     fn { index => self.data[self.pos + index] |> to_u8 },
   )
