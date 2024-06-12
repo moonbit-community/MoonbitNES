@@ -3,7 +3,7 @@
 // Copyright (c) 2024 Liu Rujia, International Digital Economy Academy
 
 struct PPUMemory {
-  mut nes : Option[NES] // just like CPUMemory
+  mut nes : NES? // just like CPUMemory
 }
 
 fn PPUMemory::new() -> PPUMemory {
@@ -12,7 +12,7 @@ fn PPUMemory::new() -> PPUMemory {
 
 struct PPU {
   mem : PPUMemory
-  mut nes : Option[NES] // just like CPUMemory
+  mut nes : NES? // just like CPUMemory
 
   // Current state
   mut cycle : Int // 0-340 current "column"
@@ -103,7 +103,7 @@ fn Picture::new() -> Picture {
 
 // len=0x40
 fn initPalette() -> FixedArray[Color] {
-  let cs: FixedArray[_] = [
+  let cs : FixedArray[_] = [
     0x666666, 0x002A88, 0x1412A7, 0x3B00A4, 0x5C007E, 0x6E0040, 0x6C0600, 0x561D00,
     0x333500, 0x0B4800, 0x005200, 0x004F08, 0x00404D, 0x000000, 0x000000, 0x000000,
     0xADADAD, 0x155FD9, 0x4240FF, 0x7527FE, 0xA01ACC, 0xB71E7B, 0xB53120, 0x994E00,
@@ -188,14 +188,15 @@ fn initPPU() -> PPU {
 
 // https://www.nesdev.org/wiki/Mirroring
 
+let mirrorLookup = [
+  [0, 0, 1, 1],
+  [0, 1, 0, 1],
+  [0, 0, 0, 0],
+  [1, 1, 1, 1],
+  [0, 1, 2, 3],
+]
+
 fn mirrorAddress(mode : UInt8, adr : UInt16) -> UInt16 {
-  let mirrorLookup = [
-    [0, 0, 1, 1],
-    [0, 1, 0, 1],
-    [0, 0, 0, 0],
-    [1, 1, 1, 1],
-    [0, 1, 2, 3],
-  ]
   let adr = (adr - (0x2000 |> to_u16)).0 % 0x1000
   let table = adr / 0x0400 |> to_u8
   let offset = adr % 0x0400
