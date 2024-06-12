@@ -894,7 +894,7 @@ fn opAXS(self : CPU, info : StepInfo) -> Unit {
 }
 
 fn opDCP(self : CPU, info : StepInfo) -> Unit {
-  // Equivalent to DEC value then CMP value, except supporting more addressing modes. 
+  // Equivalent to DEC value then CMP value, except supporting more addressing modes.
   // LDA #$FF followed by DCP can be used to check if the decrement underflows, which is useful for multi-byte decrements.
   self.opDEC(info)
   self.opCMP(info)
@@ -917,22 +917,22 @@ fn opLAS(self : CPU, info : StepInfo) -> Unit {
 }
 
 fn opLAX(self : CPU, info : StepInfo) -> Unit {
-  // Shortcut for LDA value then TAX. Saves a byte and two cycles and allows use of the X register with the (d),Y addressing mode. 
-  // Notice that the immediate is missing; the opcode that would have been LAX is affected by line noise on the data bus. 
+  // Shortcut for LDA value then TAX. Saves a byte and two cycles and allows use of the X register with the (d),Y addressing mode.
+  // Notice that the immediate is missing; the opcode that would have been LAX is affected by line noise on the data bus.
   // MOS 6502: even the bugs have bugs.
   self.opLDA(info)
   self.opTAX(info)
 }
 
 fn opRLA(self : CPU, info : StepInfo) -> Unit {
-  // Equivalent to ROL value then AND value, except supporting more addressing modes. 
+  // Equivalent to ROL value then AND value, except supporting more addressing modes.
   // LDA #$FF followed by RLA is an efficient way to rotate a variable while also loading it in A.
   self.opROL(info)
   self.opAND(info)
 }
 
 fn opRRA(self : CPU, info : StepInfo) -> Unit {
-  // Equivalent to ROR value then ADC value, except supporting more addressing modes. 
+  // Equivalent to ROR value then ADC value, except supporting more addressing modes.
   // Essentially this computes A + value / 2, where value is 9-bit and the division is rounded up.
   self.opROR(info)
   self.opADC(info)
@@ -954,14 +954,14 @@ fn opSHY(self : CPU, info : StepInfo) -> Unit {
 }
 
 fn opSLO(self : CPU, info : StepInfo) -> Unit {
-  // Equivalent to ASL value then ORA value, except supporting more addressing modes. 
+  // Equivalent to ASL value then ORA value, except supporting more addressing modes.
   // LDA #0 followed by SLO is an efficient way to shift a variable while also loading it in A.
   self.opASL(info)
   self.opORA(info)
 }
 
 fn opSRE(self : CPU, info : StepInfo) -> Unit {
-  // Equivalent to LSR value then EOR value, except supporting more addressing modes. 
+  // Equivalent to LSR value then EOR value, except supporting more addressing modes.
   // LDA #0 followed by SRE is an efficient way to shift a variable while also loading it in A.
   self.opLSR(info)
   self.opEOR(info)
@@ -979,7 +979,7 @@ fn opXAA(self : CPU, info : StepInfo) -> Unit {
 
 // 6502/6510/8500/8502 Opcode matrix:
 // http://www.oxyron.de/html/opcodes02.html
-let instructions: Array[(CPU, StepInfo) -> Unit] = [ // All 6502 instructions
+let instructions: FixedArray[(CPU, StepInfo) -> Unit] = [ // All 6502 instructions
 	opBRK, opORA, opKIL, opSLO, opNOP, opORA, opASL, opSLO,//0
 	opPHP, opORA, opASL, opANC, opNOP, opORA, opASL, opSLO,
 	opBPL, opORA, opKIL, opSLO, opNOP, opORA, opASL, opSLO,//1
@@ -1015,7 +1015,7 @@ let instructions: Array[(CPU, StepInfo) -> Unit] = [ // All 6502 instructions
 ]
 
 // instructionNames indicates the name of each instruction
-let instructionNames: Array[String] = [
+let instructionNames: FixedArray[String] = [
 	"BRK", "ORA", "KIL", "SLO", "NOP", "ORA", "ASL", "SLO",
 	"PHP", "ORA", "ASL", "ANC", "NOP", "ORA", "ASL", "SLO",
 	"BPL", "ORA", "KIL", "SLO", "NOP", "ORA", "ASL", "SLO",
@@ -1051,7 +1051,7 @@ let instructionNames: Array[String] = [
 ]
 
 let
-  instructionModes: Array[Int] = [ // Addressing modes
+  instructionModes: FixedArray[Int] = [ // Addressing modes
      5,   6,   5,   6,  10,  10,  10,  10,   5,   4,   3,   4,   0,   0,   0,   0,
      9,   8,   5,   8,  11,  11,  11,  11,   5,   2,   5,   2,   1,   1,   1,   1,
      0,   6,   5,   6,  10,  10,  10,  10,   5,   4,   3,   4,   0,   0,   0,   0,
@@ -1071,7 +1071,7 @@ let
   ]
 
 let
-  instructionSizes: Array[Int] = [ // Size in bytes
+  instructionSizes: FixedArray[Int] = [ // Size in bytes
      1,   2,   0,   2,   2,   2,   2,   2,   1,   2,   1,   0,   3,   3,   3,   3,
      2,   2,   0,   2,   2,   2,   2,   2,   1,   3,   1,   3,   3,   3,   3,   3,
      3,   2,   0,   2,   2,   2,   2,   2,   1,   2,   1,   0,   3,   3,   3,   3,
@@ -1091,7 +1091,7 @@ let
   ]
 
 let
-  instructionCycles: Array[Int] = [ // Number of cycles used
+  instructionCycles: FixedArray[Int] = [ // Number of cycles used
      7,   6,   2,   8,   3,   3,   5,   5,   3,   2,   2,   2,   4,   4,   6,   6,
      2,   5,   2,   8,   4,   4,   6,   6,   2,   4,   2,   7,   4,   4,   7,   7,
      6,   6,   2,   8,   3,   3,   5,   5,   4,   2,   2,   2,   4,   4,   6,   6,
@@ -1111,7 +1111,7 @@ let
   ]
 
 let
-  instructionPageCycles: Array[Int] = [ // Cycles used on a page cross
+  instructionPageCycles: FixedArray[Int] = [ // Cycles used on a page cross
      0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
      1,   1,   0,   0,   0,   0,   0,   0,   0,   1,   0,   0,   1,   1,   0,   0,
      0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
@@ -1131,7 +1131,7 @@ let
   ]
 
 let
-  instructionUnofficial: Array[Int] = [ // 1 if official
+  instructionUnofficial: FixedArray[Int] = [ // 1 if official
   // 0    1    2    3    4    5    6    7    8    9    A    B    C    D    E    F
      0,   0,   1,   1,   1,   0,   0,   1,   0,   0,   0,   1,   1,   0,   0,   1,//0
      0,   0,   1,   1,   1,   0,   0,   1,   0,   0,   1,   1,   1,   0,   0,   1,//1
@@ -1235,7 +1235,7 @@ fn step(self : CPU, trace_log : Bool) -> Int {
 
   // CHECKME: AbsoluteX can cross page too!
   if mode == AbsoluteX && pagesDiffer(adr - (self.x |> to_u16), adr) || (
-    [AbsoluteY, IndirectIndexed] : Array[AddressingMode]).contains(mode) && pagesDiffer(
+    [AbsoluteY, IndirectIndexed] : FixedArray[AddressingMode]).contains(mode) && pagesDiffer(
     adr - (self.y |> to_u16),
     adr,
   ) {

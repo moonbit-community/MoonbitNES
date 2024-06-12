@@ -20,9 +20,9 @@ struct PPU {
   mut frame : Int64 // frame counter
 
   // storage variables
-  paletteData : Array[UInt8] // 32 bytes.
-  nameTableData : Array[UInt8] // 2048 bytes "VRAM"
-  oamData : Array[UInt8] // 256 bytes
+  paletteData : FixedArray[UInt8] // 32 bytes.
+  nameTableData : FixedArray[UInt8] // 2048 bytes "VRAM"
+  oamData : FixedArray[UInt8] // 256 bytes
   //mut front: Picture
   mut back : Picture // nim: ref Picture
 
@@ -49,10 +49,10 @@ struct PPU {
 
   // sprites temporary variables
   mut spriteCount : Int
-  mut spritePatterns : Array[UInt32] // len=8
-  mut spritePositions : Array[UInt8] // len=8
-  mut spritePriorities : Array[UInt8] // len=8
-  mut spriteIndices : Array[UInt8] // len=8
+  mut spritePatterns : FixedArray[UInt32] // len=8
+  mut spritePositions : FixedArray[UInt8] // len=8
+  mut spritePriorities : FixedArray[UInt8] // len=8
+  mut spriteIndices : FixedArray[UInt8] // len=8
 
   // $2000 PPUCTRL
   mut flagNameTable : UInt8 // 0: $2000; 1: $2400; 2: $2800; 3: $2C00  **NOT USED
@@ -87,23 +87,23 @@ type Color Int // 0xrrggbb
 
 // type alias will be better
 struct Picture {
-  pixels : Array[Array[Color]] // [240][256]
+  pixels : FixedArray[FixedArray[Color]] // [240][256]
 }
 
 let resolution : (Int, Int) = (256, 240)
 
 fn Picture::new() -> Picture {
   {
-    pixels: Array::new_with_index(
+    pixels: FixedArray::new_with_index(
       resolution.1,
-      fn(_i) { Array::make(resolution.0, Color(0)) },
+      fn(_i) { FixedArray::make(resolution.0, Color(0)) },
     ),
   }
 }
 
 // len=0x40
-fn initPalette() -> Array[Color] {
-  let cs = [
+fn initPalette() -> FixedArray[Color] {
+  let cs: FixedArray[_] = [
     0x666666, 0x002A88, 0x1412A7, 0x3B00A4, 0x5C007E, 0x6E0040, 0x6C0600, 0x561D00,
     0x333500, 0x0B4800, 0x005200, 0x004F08, 0x00404D, 0x000000, 0x000000, 0x000000,
     0xADADAD, 0x155FD9, 0x4240FF, 0x7527FE, 0xA01ACC, 0xB71E7B, 0xB53120, 0x994E00,
@@ -116,7 +116,7 @@ fn initPalette() -> Array[Color] {
   cs.map(Color::Color)
 }
 
-let palette : Array[Color] = initPalette()
+let palette : FixedArray[Color] = initPalette()
 
 fn reset(self : PPU) -> Unit {
   self.cycle = 340
@@ -137,9 +137,9 @@ fn initPPU() -> PPU {
     cycle: 0,
     scanLine: 0,
     frame: 0L,
-    paletteData: Array::make(32, 0 |> to_u8),
-    nameTableData: Array::make(2048, 0 |> to_u8),
-    oamData: Array::make(256, 0 |> to_u8),
+    paletteData: FixedArray::make(32, 0 |> to_u8),
+    nameTableData: FixedArray::make(2048, 0 |> to_u8),
+    oamData: FixedArray::make(256, 0 |> to_u8),
     back: Picture::new(),
     //front: Picture::new(),
     // backbuffer
@@ -159,10 +159,10 @@ fn initPPU() -> PPU {
     highTile: 0 |> to_u8,
     tileData: 0L,
     spriteCount: 0,
-    spritePatterns: Array::make(8, 0 |> to_u32),
-    spritePositions: Array::make(8, 0 |> to_u8),
-    spritePriorities: Array::make(8, 0 |> to_u8),
-    spriteIndices: Array::make(8, 0 |> to_u8),
+    spritePatterns: FixedArray::make(8, 0 |> to_u32),
+    spritePositions: FixedArray::make(8, 0 |> to_u8),
+    spritePriorities: FixedArray::make(8, 0 |> to_u8),
+    spriteIndices: FixedArray::make(8, 0 |> to_u8),
     flagNameTable: 0 |> to_u8,
     flagIncrement: false,
     flagSpriteTable: false,

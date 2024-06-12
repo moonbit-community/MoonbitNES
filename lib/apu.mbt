@@ -4,10 +4,10 @@
 
 struct APU {
   mut nes : Option[NES]
-  // chan : Array[Double] // len=4096. go: chan float32
+  // chan : FixedArray[Double] // len=4096. go: chan float32
   // mut chanPos : Int // used by nim
   sampleRate : Double
-  pulse : Array[Pulse] // len=2
+  pulse : FixedArray[Pulse] // len=2
   triangle : Triangle
   mut noise : Noise
   mut dmc : DMC
@@ -23,7 +23,7 @@ fn initAPU() -> APU {
   let pulse1 = Pulse::new()
   let result : APU = {
     nes: None,
-    // chan: Array::make(4096, 0.0),
+    // chan: FixedArray::make(4096, 0.0),
     // chanPos: 0,
     sampleRate: cpuFrequency / 44100.0, // a constant in nim
     pulse: [pulse0, pulse1],
@@ -43,37 +43,37 @@ fn initAPU() -> APU {
 
 let frameCounterRate : Double = cpuFrequency / 240.0
 
-let lengthTable : Array[Int] = [
+let lengthTable : FixedArray[Int] = [
   10, 254, 20, 2, 40, 4, 80, 6, 160, 8, 60, 10, 14, 12, 26, 14, 12, 16, 24, 18, 48,
   20, 96, 22, 192, 24, 72, 26, 16, 28, 32, 30,
 ]
 
-let dutyTable : Array[Array[Int]] = [
+let dutyTable : FixedArray[FixedArray[Int]] = [
   [0, 1, 0, 0, 0, 0, 0, 0],
   [0, 1, 1, 0, 0, 0, 0, 0],
   [0, 1, 1, 1, 1, 0, 0, 0],
   [1, 0, 0, 1, 1, 1, 1, 1],
 ]
 
-let triangleTable : Array[Int] = [
+let triangleTable : FixedArray[Int] = [
   15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8,
   9, 10, 11, 12, 13, 14, 15,
 ]
 
 // uint16
-let noiseTable : Array[Int] = [
+let noiseTable : FixedArray[Int] = [
   4, 8, 16, 32, 64, 96, 128, 160, 202, 254, 380, 508, 762, 1016, 2034, 4068,
 ]
 
 // uint8
-let dmcTable : Array[Int] = [
+let dmcTable : FixedArray[Int] = [
   214, 190, 170, 160, 143, 127, 113, 107, 95, 80, 71, 64, 53, 42, 36, 27,
 ]
 
 // float32
-let pulseTable : Array[Double] = Array::make(31, 0.0)
+let pulseTable : FixedArray[Double] = FixedArray::make(31, 0.0)
 
-let tndTable : Array[Double] = Array::make(203, 0.0)
+let tndTable : FixedArray[Double] = FixedArray::make(203, 0.0)
 
 fn step(self : APU, trace_log : Bool) -> Unit {
   let cycle1 = self.cycle

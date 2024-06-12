@@ -2,9 +2,9 @@
 // Copyright (c) 2015 Dennis Felsing
 // Copyright (c) 2024 Liu Rujia, International Digital Economy Academy
 
-let canvas : Ref[Array[Int]] = { val: Array::make(0, 0) }
+let canvas : Ref[FixedArray[Int]] = { val: FixedArray::make(0, 0) }
 
-pub fn set_image_data(image_data : Array[Int]) -> Unit {
+pub fn set_image_data(image_data : FixedArray[Int]) -> Unit {
   canvas.val = image_data
 }
 

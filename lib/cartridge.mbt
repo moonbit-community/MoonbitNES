@@ -3,9 +3,9 @@
 // Copyright (c) 2024 Liu Rujia, International Digital Economy Academy
 
 struct Cartridge {
-  prg : Array[UInt8] // PRG-ROM banks
-  chr : Array[UInt8] // CHR-ROM banks
-  sram : Array[UInt8] // Save RAM
+  prg : FixedArray[UInt8] // PRG-ROM banks
+  chr : FixedArray[UInt8] // CHR-ROM banks
+  sram : FixedArray[UInt8] // Save RAM
   mapper : UInt8 // mapper type
   mut mirror : UInt8 // mirroring mode
   battery : Bool // battery present
@@ -31,7 +31,7 @@ struct iNESHeader {
   control1 : UInt8 // control bits
   control2 : UInt8 // control bits
   numRAM : UInt8 // PRG-RAM size (x 8KB)
-  padding : Array[UInt8] // 7 bytes, unused padding
+  padding : FixedArray[UInt8] // 7 bytes, unused padding
 }
 
 fn readiNESHeader(self : MemoryReader) -> iNESHeader {
@@ -65,7 +65,7 @@ fn readiNESHeader(self : MemoryReader) -> iNESHeader {
 // ||||+---- 1: Ignore mirroring control or above mirroring bit; instead provide four-screen VRAM
 // ++++----- Lower nybble of mapper number
 
-fn newCartridge(data : Array[Int]) -> Cartridge {
+fn newCartridge(data : FixedArray[Int]) -> Cartridge {
   let reader = MemoryReader::new(data)
   let header = reader.readiNESHeader()
   if header.magic != iNESMagic {
@@ -103,11 +103,11 @@ fn newCartridge(data : Array[Int]) -> Cartridge {
   // read chr-rom bank(s)
   // provide chr-rom/ram if not in file
   let chr = if header.numCHR == (0 |> to_u8) {
-    Array::make(8192, 0 |> to_u8)
+    FixedArray::make(8192, 0 |> to_u8)
   } else {
     println("read \(chr_len) bytes of chr-rom")
     reader.readUInt8Array(chr_len)
   }
-  let sram = Array::make(0x2000, 0 |> to_u8)
+  let sram = FixedArray::make(0x2000, 0 |> to_u8)
   { prg, chr, sram, mapper, mirror, battery }
 }

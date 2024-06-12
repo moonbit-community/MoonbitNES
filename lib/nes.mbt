@@ -24,7 +24,7 @@ fn formatCycleInfo(self : NES) -> String {
   "PPU:\(ppu_x),\(ppu_y) CYC:\(cyc)"
 }
 
-pub fn nestest(rom : Array[Int]) -> Unit {
+pub fn nestest(rom : FixedArray[Int]) -> Unit {
   println("nestest")
   //cart := newCartridge(rom)
   let nes = NES::new(rom)
@@ -48,7 +48,7 @@ pub fn nestest(rom : Array[Int]) -> Unit {
 }
 
 // get ready for playing!
-pub fn load_rom(rom: Array[Int]) -> Unit {
+pub fn load_rom(rom: FixedArray[Int]) -> Unit {
   let nes = NES::new(rom)
   nes.reset()
   gs.nes = Some(nes)

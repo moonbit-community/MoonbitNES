@@ -3,13 +3,13 @@
 // Copyright (c) 2024 Liu Rujia, International Digital Economy Academy
 
 struct Controller {
-  mut buttons : Array[Bool]
+  mut buttons : FixedArray[Bool]
   mut index : Int
   mut strobe : UInt8
 }
 
 fn Controller::new() -> Controller {
-  { buttons: Array::make(8, false), index: 0, strobe: 0 |> to_u8 }
+  { buttons: FixedArray::make(8, false), index: 0, strobe: 0 |> to_u8 }
 }
 
 // nim and go has different logic?

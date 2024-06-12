@@ -7,14 +7,14 @@ struct NES {
   apu : APU
   ppu : PPU
   cartridge : Cartridge
-  controllers : Array[Controller]
+  controllers : FixedArray[Controller]
   mut mapper : Option[Mapper]
-  ram : Array[UInt8] // 2048 bytes
+  ram : FixedArray[UInt8] // 2048 bytes
   mut step_cnt : Int
 }
 
-fn NES::new(data : Array[Int]) -> NES {
-  let controllers = [Controller::new(), Controller::new()]
+fn NES::new(data : FixedArray[Int]) -> NES {
+  let controllers: FixedArray[_] = [Controller::new(), Controller::new()]
   let nes : NES = {
     cpu: initCPU(),
     ppu: initPPU(),
@@ -22,7 +22,7 @@ fn NES::new(data : Array[Int]) -> NES {
     cartridge: newCartridge(data),
     controllers,
     mapper: None,
-    ram: Array::make(2048, 0 |> to_u8),
+    ram: FixedArray::make(2048, 0 |> to_u8),
     step_cnt: 0,
   }
   nes.mapper = Some(Mapper::new(nes))

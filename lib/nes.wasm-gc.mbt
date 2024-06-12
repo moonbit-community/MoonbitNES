@@ -6,11 +6,11 @@ extern "wasm" fn load8_u(offset : Int) -> Int =
   #|(func (param i32) (result i32) (i32.load8_u (local.get 0)))
 
 pub fn nestest_extern(length : Int) -> Unit {
-  nestest(Array::new_with_index(length, load8_u))
+  nestest(FixedArray::new_with_index(length, load8_u))
 }
 
 pub fn load_rom_extern(length : Int) -> Unit {
-  load_rom(Array::new_with_index(length, load8_u))
+  load_rom(FixedArray::new_with_index(length, load8_u))
 }
 
 // ffi

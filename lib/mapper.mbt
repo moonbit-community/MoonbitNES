@@ -38,7 +38,7 @@ fn to_mapper[T : IMapper](m : T) -> Mapper {
 
 // Mapper 0(NROM)
 // https://www.nesdev.org/wiki/NROM
-// The generic designation NROM refers to the Nintendo cartridge boards NES-NROM-128, NES-NROM-256, their HVC counterparts, and clone boards. 
+// The generic designation NROM refers to the Nintendo cartridge boards NES-NROM-128, NES-NROM-256, their HVC counterparts, and clone boards.
 // he suffixes 128 and 256 refer to kilobits by Nintendo's own designation; not kilobytes
 // [Overview]
 // PRG ROM size: 16 KiB for NROM-128, 32 KiB for NROM-256 (DIP-28 standard pinout)
@@ -143,8 +143,8 @@ struct Mapper1 {
   mut prgBank : UInt8
   mut chrBank0 : UInt8
   mut chrBank1 : UInt8
-  prgOffsets : Array[Int] // cnt=2
-  chrOffsets : Array[Int] // cnt=2
+  prgOffsets : FixedArray[Int] // cnt=2
+  chrOffsets : FixedArray[Int] // cnt=2
 }
 
 fn step(self : Mapper1) -> Unit {
@@ -308,8 +308,8 @@ fn Mapper1::new(cartridge : Cartridge) -> Mapper1 {
     prgBank: 0 |> to_u8,
     chrBank0: 0 |> to_u8,
     chrBank1: 0 |> to_u8,
-    prgOffsets: Array::make(2, 0),
-    chrOffsets: Array::make(2, 0),
+    prgOffsets: FixedArray::make(2, 0),
+    chrOffsets: FixedArray::make(2, 0),
   }
   result.prgOffsets[1] = result.prgBankOffset(-1)
   result
@@ -387,11 +387,11 @@ struct Mapper4 {
   cartridge : Cartridge
   console : NES
   mut register : UInt8
-  registers : Array[UInt8] // len=8
+  registers : FixedArray[UInt8] // len=8
   mut prgMode : UInt8
   mut chrMode : UInt8
-  prgOffsets : Array[Int] // len=4
-  chrOffsets : Array[Int] // len=8
+  prgOffsets : FixedArray[Int] // len=4
+  chrOffsets : FixedArray[Int] // len=8
   mut reload : UInt8
   mut counter : UInt8
   mut irqEnable : Bool
@@ -582,11 +582,11 @@ fn Mapper4::new(cartridge : Cartridge, nes : NES) -> Mapper4 {
     cartridge,
     console: nes,
     register: 0 |> to_u8,
-    registers: Array::make(8, 0 |> to_u8),
+    registers: FixedArray::make(8, 0 |> to_u8),
     prgMode: 0 |> to_u8,
     chrMode: 0 |> to_u8,
-    prgOffsets: Array::make(4, 0),
-    chrOffsets: Array::make(8, 0),
+    prgOffsets: FixedArray::make(4, 0),
+    chrOffsets: FixedArray::make(8, 0),
     reload: 0 |> to_u8,
     counter: 0 |> to_u8,
     irqEnable: false,
