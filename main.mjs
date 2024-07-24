@@ -6,7 +6,7 @@ const speed_multiplier = 1;
 const do_nestest = false; // execute nestest and generate a log to be compared with nestest/nestest.log
 const do_benchmark = false; // run the emulator for 10 seconds and print audio stats
 const do_run_with_logging = false; // run the emulator for 10 seconds and print logs
-const backend = "wasm" // wasm or wasm-gc or js
+const backend = "wasm-gc" // wasm or wasm-gc or js
 
 /// Canvas
 const SCREEN_WIDTH = 256;
@@ -277,7 +277,6 @@ if (backend == "wasm-gc" || backend == "wasm") {
                 } else {
                     // Allocate memory for the ROM
                     let offset = moonbitnes.malloc(rom_data.length);
-                    console.log(offset);
                     moonbitnes.set_offset(offset);
                     // Put the ROM data into the memory
                     new Uint8Array(memory.buffer, offset).set(rom_data, 0);
