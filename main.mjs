@@ -199,7 +199,6 @@ if (backend == "wasm-gc") {
             },
         });
 
-        instance.exports._start();
         moonbitnes = {
             nestest: instance.exports["nestest"],
             load_rom: instance.exports["load_rom"],
@@ -235,7 +234,6 @@ if (backend == "wasm-gc") {
 
             const instance = await WebAssembly.instantiate(module, importObject);
 
-            instance.exports._start();
             moonbitnes = {
                 nestest: instance.exports["nestest"],
                 load_rom: instance.exports["load_rom"],
