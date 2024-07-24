@@ -6,7 +6,7 @@ const speed_multiplier = 1;
 const do_nestest = false; // execute nestest and generate a log to be compared with nestest/nestest.log
 const do_benchmark = false; // run the emulator for 10 seconds and print audio stats
 const do_run_with_logging = false; // run the emulator for 10 seconds and print logs
-const backend = "wasm-gc" // wasm-gc or js
+const backend = "wasm" // wasm or wasm-gc or js
 
 /// Canvas
 const SCREEN_WIDTH = 256;
@@ -180,8 +180,8 @@ function run_with_logging() {
 document.addEventListener('keydown', (event) => { nes_keyboard(buttonDown, event) });
 document.addEventListener('keyup', (event) => { nes_keyboard(buttonUp, event) });
 
-if (backend == "wasm-gc") {
-    const wasm_binary = "target/wasm-gc/release/build/lib/lib.wasm";
+if (backend == "wasm-gc" || backend == "wasm") {
+    const wasm_binary = `target/${backend}/release/build/lib/lib.wasm`;
     const module = await WebAssembly.compileStreaming(fetch(wasm_binary));
 
     if (do_nestest) {
@@ -206,14 +206,28 @@ if (backend == "wasm-gc") {
             buttonDown: instance.exports["buttonDown"],
             buttonUp: instance.exports["buttonUp"],
             run_with_logging: instance.exports["run_with_logging"],
+            malloc: instance.exports["malloc"],
+            free: instance.exports["free"],
+            set_offset: instance.exports["set_offset"]
         }
         const memory = instance.exports["moonbit.memory"];
         nes_load_url("nes-canvas", "nestest/nestest.nes", function (rom_data) {
-            // Allocate memory for the ROM
-            memory.grow(rom_data.length / 65536);
-            // Put the ROM data into the memory
-            new Uint8Array(memory.buffer, 0).set(rom_data, 0);
-            moonbitnes.nestest(rom_data.length);
+            if (backend == "wasm-gc") {
+                // Allocate memory for the ROM
+                memory.grow(rom_data.length / 65536);
+                // Put the ROM data into the memory
+                new Uint8Array(memory.buffer, 0).set(rom_data, 0);
+                moonbitnes.nestest(rom_data.length);
+            } else {
+                // Allocate memory for the ROM
+                const offset = moonbitnes.malloc(rom_data.length);
+                moonbitnes.set_offset(offset);
+                // Put the ROM data into the memory
+                new Uint8Array(memory.buffer, offset).set(rom_data, 0);
+                moonbitnes.nestest(rom_data.length);
+                moonbitnes.free(offset);
+            }
+
             const blob = new Blob([new TextDecoder("utf-16").decode(new Uint16Array(buffer))]);
             const url = URL.createObjectURL(blob);
             document.getElementById("download").href = url;
@@ -241,20 +255,43 @@ if (backend == "wasm-gc") {
                 buttonDown: instance.exports["buttonDown"],
                 buttonUp: instance.exports["buttonUp"],
                 run_with_logging: instance.exports["run_with_logging"],
+                malloc: instance.exports["malloc"],
+                free: instance.exports["free"],
+                set_offset: instance.exports["set_offset"]
             }
             const memory = instance.exports["moonbit.memory"];
 
             nes_load_file("nes-canvas", file, function (rom_data) {
-                // Allocate memory for the ROM
-                memory.grow(rom_data.length / 65536);
-                // Put the ROM data into the memory
-                new Uint8Array(memory.buffer, 0).set(rom_data, 0);
-                moonbitnes.load_rom(rom_data.length);
+                if (backend == "wasm-gc") {
+                    // Allocate memory for the ROM
+                    memory.grow(rom_data.length / 65536);
+                    // Put the ROM data into the memory
+                    new Uint8Array(memory.buffer, 0).set(rom_data, 0);
 
-                // Allocate framebuffer
-                memory.grow(Math.max(0, (FRAMEBUFFER_SIZE * 4 - memory.buffer.byteLength) / 65536 + 1));
-                // Create an ImageData object with the framebuffer memory
-                image = new ImageData(new Uint8ClampedArray(memory.buffer, 0, FRAMEBUFFER_SIZE * 4), SCREEN_WIDTH, SCREEN_HEIGHT);
+                    moonbitnes.load_rom(rom_data.length);
+
+                    // Allocate framebuffer
+                    memory.grow(Math.max(0, (FRAMEBUFFER_SIZE * 4 - memory.buffer.byteLength) / 65536 + 1));
+                    // Create an ImageData object with the framebuffer memory
+                    image = new ImageData(new Uint8ClampedArray(memory.buffer, 0, FRAMEBUFFER_SIZE * 4), SCREEN_WIDTH, SCREEN_HEIGHT);
+                } else {
+                    // Allocate memory for the ROM
+                    let offset = moonbitnes.malloc(rom_data.length);
+                    console.log(offset);
+                    moonbitnes.set_offset(offset);
+                    // Put the ROM data into the memory
+                    new Uint8Array(memory.buffer, offset).set(rom_data, 0);
+
+                    moonbitnes.load_rom(rom_data.length);
+
+                    moonbitnes.free(offset);
+                    // Allocate framebuffer
+                    offset = moonbitnes.malloc(FRAMEBUFFER_SIZE * 4);
+                    moonbitnes.set_offset(offset);
+                    // Create an ImageData object with the framebuffer memory
+                    image = new ImageData(new Uint8ClampedArray(memory.buffer, offset, FRAMEBUFFER_SIZE * 4), SCREEN_WIDTH, SCREEN_HEIGHT);
+                }
+
                 if (do_benchmark) {
                     run_benchmark();
                 }

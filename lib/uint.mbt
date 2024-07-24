@@ -218,7 +218,7 @@ fn readUInt8(self : MemoryReader) -> UInt8 {
 }
 
 fn readUInt8Array(self : MemoryReader, cnt : Int) -> FixedArray[UInt8] {
-  let result = FixedArray::new_with_index(
+  let result = FixedArray::makei(
     cnt,
     fn { index => self.data[self.pos + index] |> to_u8 },
   )

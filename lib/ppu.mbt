@@ -94,7 +94,7 @@ let resolution : (Int, Int) = (256, 240)
 
 fn Picture::new() -> Picture {
   {
-    pixels: FixedArray::new_with_index(
+    pixels: FixedArray::makei(
       resolution.1,
       fn(_i) { FixedArray::make(resolution.0, Color(0)) },
     ),

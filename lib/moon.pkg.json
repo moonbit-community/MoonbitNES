@@ -1,5 +1,20 @@
 {
   "link": {
+    "wasm": {
+      "exports": [
+        "nestest_extern:nestest",
+        "load_rom_extern:load_rom",
+        "run",
+        "buttonDown",
+        "buttonUp",
+        "run_with_logging",
+        "malloc",
+        "free",
+        "set_offset"
+      ],
+      "export-memory-name": "moonbit.memory",
+      "heap-start-address": 0
+    },
     "wasm-gc": {
       "exports": [
         "nestest_extern:nestest",
