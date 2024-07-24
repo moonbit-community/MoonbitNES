@@ -43,21 +43,13 @@ fn to_u64[T : U64](t : T) -> UInt64 {
   t.u64()
 }
 
-fn U8::u8(i : Int) -> UInt8 {
-  UInt8(i.land(0xFF))
-}
+impl U8 for Int with u8(i : Int) -> UInt8 { UInt8(i.land(0xFF)) }
 
-fn U16::u16(i : Int) -> UInt16 {
-  UInt16(i.land(0xFFFF))
-}
+impl U16 for Int with u16(i : Int) -> UInt16 { UInt16(i.land(0xFFFF)) }
 
-fn U32::u32(i : Int) -> UInt32 {
-  UInt32(i)
-}
+impl U32 for Int with u32(i : Int) -> UInt32 { UInt32(i) }
 
-fn U64::u64(i : Int64) -> UInt64 {
-  UInt64(i)
-}
+impl U64 for Int64 with u64(i : Int64) -> UInt64 { UInt64(i) }
 
 fn to_string(self : UInt8) -> String {
   self.0.to_string()
@@ -88,7 +80,7 @@ fn op_mod(self : UInt16, rhs : UInt16) -> UInt16 {
   self.0 % rhs.0 |> to_u16
 }
 
-fn U8::u8(self : Bool) -> UInt8 {
+impl U8 for Bool with u8(self : Bool) -> UInt8 {
   if self {
     UInt8(1)
   } else {
