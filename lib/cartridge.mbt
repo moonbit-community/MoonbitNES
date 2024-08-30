@@ -36,17 +36,17 @@ struct iNESHeader {
 
 fn readiNESHeader(self : MemoryReader) -> iNESHeader {
   let magic = self.readIntLE()
-  println("magic: \(magic)")
+  println("magic: \{magic})")
   let numPRG = self.readUInt8()
   let numCHR = self.readUInt8()
-  println("numPRG: \(numPRG)")
-  println("numCHR: \(numCHR)")
+  println("numPRG: \{numPRG})")
+  println("numCHR: \{numCHR})")
   let control1 = self.readUInt8()
   let control2 = self.readUInt8()
   let numRAM = self.readUInt8()
-  println("control1: \(control1)")
-  println("control2: \(control2)")
-  println("numRAM: \(numRAM)")
+  println("control1: \{control1})")
+  println("control2: \{control2})")
+  println("numRAM: \{numRAM})")
   let padding = self.readUInt8Array(7)
   { magic, numPRG, numCHR, control1, control2, numRAM, padding }
 }
@@ -77,7 +77,7 @@ fn newCartridge(data : FixedArray[Int]) -> Cartridge {
   let mapper1 = header.control1.lsr(4)
   let mapper2 = header.control2.lsr(4)
   let mapper = mapper1.lor(mapper2.lsl(4))
-  println("mapper: \(mapper)")
+  println("mapper: \{mapper})")
 
   // mirroring type
   let mirror1 = header.control1.land(1 |> to_u8)
@@ -98,14 +98,14 @@ fn newCartridge(data : FixedArray[Int]) -> Cartridge {
 
   // read prg-rom bank(s)
   let prg = reader.readUInt8Array(prg_len)
-  println("read \(prg_len) bytes of prg-rom")
+  println("read \{prg_len} bytes of prg-rom")
 
   // read chr-rom bank(s)
   // provide chr-rom/ram if not in file
   let chr = if header.numCHR == (0 |> to_u8) {
     FixedArray::make(8192, 0 |> to_u8)
   } else {
-    println("read \(chr_len) bytes of chr-rom")
+    println("read \{chr_len} bytes of chr-rom")
     reader.readUInt8Array(chr_len)
   }
   let sram = FixedArray::make(0x2000, 0 |> to_u8)

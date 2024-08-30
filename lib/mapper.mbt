@@ -114,7 +114,7 @@ fn idxSet(self : Mapper2, adr : UInt16, val : UInt8) -> Unit {
 fn Mapper2::new(cartridge : Cartridge) -> Mapper2 {
   let prg_len = cartridge.prg.length()
   let prgBanks = prg_len / 0x4000
-  println("Mapper2::new: \(prg_len) \(prgBanks)")
+  println("Mapper2::new: \{prg_len} \{prgBanks}")
   { cartridge, prgBanks, prgBank1: 0, prgBank2: prgBanks - 1 }
 }
 
@@ -123,12 +123,12 @@ fn to_string(self : Mapper2) -> String {
   let prgBanks = self.prgBanks
   let prgBank1 = self.prgBank1
   let prgBank2 = self.prgBank2
-  "\(prg_len) \(prgBanks) \(prgBank1) \(prgBank2)"
+  "\{prg_len} \{prgBanks} \{prgBank1} \{prgBank2}"
 }
 
 fn newMapper2(self : NES) -> Mapper {
   let mapper = Mapper2::new(self.cartridge)
-  println("mapper: \(mapper)")
+  println("mapper: \{mapper}")
   to_mapper(mapper)
 }
 
@@ -246,8 +246,8 @@ fn writePRGBank(self : Mapper1, value : UInt8) -> Unit {
 }
 
 fn prgBankOffset(self : Mapper1, index : Int) -> Int {
-  let index = if index >= 0x80 { index - 0x100 } else { index } % (self.cartridge.prg.length() /
-    0x4000)
+  let index = if index >= 0x80 { index - 0x100 } else { index } %
+    (self.cartridge.prg.length() / 0x4000)
   let offset = index * 0x4000
   if offset < 0 {
     offset + self.cartridge.prg.length()
@@ -257,8 +257,8 @@ fn prgBankOffset(self : Mapper1, index : Int) -> Int {
 }
 
 fn chrBankOffset(self : Mapper1, index : Int) -> Int {
-  let index = if index >= 0x80 { index - 0x100 } else { index } % (self.cartridge.chr.length() /
-    0x1000)
+  let index = if index >= 0x80 { index - 0x100 } else { index } %
+    (self.cartridge.chr.length() / 0x1000)
   let offset = index * 0x1000
   if offset < 0 {
     offset + self.cartridge.chr.length()
@@ -517,8 +517,8 @@ fn writeIRQEnable(self : Mapper4, value : UInt8) -> Unit {
 }
 
 fn prgBankOffset(self : Mapper4, index : Int) -> Int {
-  let index = if index >= 0x80 { index - 0x100 } else { index } % (self.cartridge.prg.length() /
-    0x2000)
+  let index = if index >= 0x80 { index - 0x100 } else { index } %
+    (self.cartridge.prg.length() / 0x2000)
   let offset = index * 0x2000
   if offset < 0 {
     offset + self.cartridge.prg.length()
@@ -528,8 +528,8 @@ fn prgBankOffset(self : Mapper4, index : Int) -> Int {
 }
 
 fn chrBankOffset(self : Mapper4, index : Int) -> Int {
-  let index = if index >= 0x80 { index - 0x100 } else { index } % (self.cartridge.chr.length() /
-    0x0400)
+  let index = if index >= 0x80 { index - 0x100 } else { index } %
+    (self.cartridge.chr.length() / 0x0400)
   let offset = index * 0x0400
   if offset < 0 {
     offset + self.cartridge.chr.length()

@@ -21,7 +21,7 @@ fn formatCycleInfo(self : NES) -> String {
   let ppu_x = self.ppu.scanLine |> formatInt3()
   let ppu_y = self.ppu.cycle |> formatInt3()
   let cyc = self.cpu.cycles
-  "PPU:\(ppu_x),\(ppu_y) CYC:\(cyc)"
+  "PPU:\{ppu_x},\{ppu_y} CYC:\{cyc}"
 }
 
 pub fn nestest(rom : FixedArray[Int]) -> Unit {

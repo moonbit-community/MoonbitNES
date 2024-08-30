@@ -5,7 +5,7 @@
 let cpuFrequency = 1789773.0
 
 struct CPUMemory {
-  mut nes : Option[NES] // Emulating "weakptr"
+  mut nes : NES? // Emulating "weakptr"
 }
 
 fn CPUMemory::new() -> CPUMemory {
@@ -142,7 +142,9 @@ fn op_set(self : CPUMemory, adr : UInt16, val : UInt8) -> Unit {
     n.ppu.writeRegister((0x2000 |> to_u16) + (adr.0 % 8 |> to_u16), val)
   } else if adr.0 == 0x4014 {
     n.ppu.writeRegister(adr, val)
-  } else if adr.0 >= 0x4000 && adr.0 <= 0x4013 || adr.0 == 0x4015 || adr.0 == 0x4017 {
+  } else if (adr.0 >= 0x4000 && adr.0 <= 0x4013) ||
+    adr.0 == 0x4015 ||
+    adr.0 == 0x4017 {
     n.apu.writeRegister(adr, val)
   } else if adr.0 == 0x4016 {
     n.controllers[0].write(val)
@@ -162,9 +164,9 @@ fn read16(self : CPUMemory, adr : UInt16) -> UInt16 {
 fn read16bug(self : CPUMemory, adr : UInt16) -> UInt16 {
   // Low byte wraps without incrementing high byte
   let a = adr
-  let b = a.land(0xFF00 |> to_u16).lor(
-    (adr |> to_u8()) + (1 |> to_u8()) |> to_u16,
-  )
+  let b = a
+    .land(0xFF00 |> to_u16)
+    .lor((adr |> to_u8()) + (1 |> to_u8()) |> to_u16)
   let lo = self[a]
   let hi = self[b]
   (hi |> to_u16).lsl(8).lor(lo |> to_u16)
@@ -275,26 +277,26 @@ fn formatAssemblySuffix(self : CPU) -> String {
       let address = self.mem[self.pc + (1 |> to_u16)]
       let address_hex = address.to_hex()
       match mode {
-        Immediate => "#$\(address_hex)"
-        ZeroPage => "$\(mem_addr8_hex) = \(stored_value_hex)"
+        Immediate => "#$\{address_hex}"
+        ZeroPage => "$\{mem_addr8_hex} = \{stored_value_hex}"
         ZeroPageX =>
-          "$\(address_hex),X @ \(mem_addr8_hex) = \(stored_value_hex)"
+          "$\{address_hex},X @ \{mem_addr8_hex} = \{stored_value_hex}"
         ZeroPageY =>
-          "$\(address_hex),Y @ \(mem_addr8_hex) = \(stored_value_hex)"
+          "$\{address_hex},Y @ \{mem_addr8_hex} = \{stored_value_hex}"
         // Indirect_X
         IndexedIndirect => {
           let new_addr_hex = (address + self.x).to_hex()
-          "($\(address_hex),X) @ \(new_addr_hex) = \(mem_addr_hex) = \(stored_value_hex)"
+          "($\{address_hex},X) @ \{new_addr_hex} = \{mem_addr_hex} = \{stored_value_hex}"
         }
         // Indirect_Y
         IndirectIndexed => {
           // sub???
           let new_addr_hex = (mem_addr - (self.y |> to_u16)).to_hex() // 16-bit
-          "($\(address_hex)),Y = \(new_addr_hex) @ \(mem_addr_hex) = \(stored_value_hex)"
+          "($\{address_hex}),Y = \{new_addr_hex} @ \{mem_addr_hex} = \{stored_value_hex}"
         }
         Relative =>
           // assuming local jumps: BNE, BVS, etc....
-          "$\(mem_addr_hex)"
+          "$\{mem_addr_hex}"
         //_ => abort("unexpected addressing mode {:?} has ops-len 2. code {:02x}")
         _ => ""
       }
@@ -306,7 +308,7 @@ fn formatAssemblySuffix(self : CPU) -> String {
       let address = self.mem.read16(self.pc + (1 |> to_u16))
       let address_hex = address.to_hex()
       match mode {
-        Indirect => "($\(address_hex)) = \(mem_addr_hex)"
+        Indirect => "($\{address_hex}) = \{mem_addr_hex}"
         Relative =>
           // if opcode.0 == 0x6c {
           //     //jmp indirect
@@ -323,15 +325,15 @@ fn formatAssemblySuffix(self : CPU) -> String {
           // } else {
           //     format!("${:04x}", address)
           // }
-          "$\(address_hex)"
+          "$\{address_hex}"
         Absolute =>
           if name == "JMP" || name == "JSR" {
-            "$\(address_hex)"
+            "$\{address_hex}"
           } else {
-            "$\(mem_addr_hex) = \(stored_value_hex)"
+            "$\{mem_addr_hex} = \{stored_value_hex}"
           }
-        AbsoluteX => "$\(address_hex),X @ \(mem_addr_hex) = \(stored_value_hex)"
-        AbsoluteY => "$\(address_hex),Y @ \(mem_addr_hex) = \(stored_value_hex)"
+        AbsoluteX => "$\{address_hex},X @ \{mem_addr_hex} = \{stored_value_hex}"
+        AbsoluteY => "$\{address_hex},Y @ \{mem_addr_hex} = \{stored_value_hex}"
         //_ => abort("unexpected addressing mode {:?} has ops-len 3. code {:02x}",
         _ => ""
       }
@@ -374,7 +376,7 @@ fn formatInstruction(self : CPU) -> String {
   let y = self.y.to_hex()
   let p = self.flags().to_hex()
   let sp = self.sp.to_hex()
-  "\(pc)  \(w0) \(w1) \(w2) \(uf)\(asm)A:\(a) X:\(x) Y:\(y) P:\(p) SP:\(sp)"
+  "\{pc}  \{w0} \{w1} \{w2} \{uf}\{asm}A:\{a} X:\{x} Y:\{y} P:\{p} SP:\{sp}"
 }
 
 // Mesen2's trace logger format：everything except "use labels" and "indent based on stack pointer"
@@ -403,7 +405,7 @@ fn formatInstructionWithMesen2Extended(self : CPU) -> String {
   let y = self.y.to_hex()
   let p = self.flags().to_hex()
   let sp = self.sp.to_hex()
-  "\(pc)  \(w0) \(w1) \(w2) \(uf)\(asm)A:\(a) X:\(x) Y:\(y) P:\(p) SP:\(sp)"
+  "\{pc}  \{w0} \{w1} \{w2} \{uf}\{asm}A:\{a} X:\{x} Y:\{y} P:\{p} SP:\{sp}"
 }
 
 fn formatMemoryDump(self : CPU, base : UInt16, cnt : Int) -> String {
@@ -474,9 +476,8 @@ fn opADC(self : CPU, info : StepInfo) -> Unit {
   self.setZN(self.a)
   self.c = a.0 + b.0 + c.0 > 0xFF
   // (a^b)&0x80 == 0 && (a^self.a)&0x80 != 0
-  self.v = a.lxor(b).land(0x80 |> to_u8()) == (0 |> to_u8()) && a.lxor(self.a).land(
-      0x80 |> to_u8(),
-    ) != (0 |> to_u8())
+  self.v = a.lxor(b).land(0x80 |> to_u8()) == (0 |> to_u8()) &&
+    a.lxor(self.a).land(0x80 |> to_u8()) != (0 |> to_u8())
 }
 
 // AND - Logical and
@@ -795,9 +796,8 @@ fn opSBC(self : CPU, info : StepInfo) -> Unit {
   self.a = a - b - ((1 |> to_u8()) - c)
   self.setZN(self.a)
   self.c = a.0 - b.0 - ((1 |> to_u8()) - c).0 >= 0
-  self.v = a.lxor(b).land(0x80 |> to_u8()) != (0 |> to_u8()) && a.lxor(self.a).land(
-      0x80 |> to_u8(),
-    ) != (0 |> to_u8())
+  self.v = a.lxor(b).land(0x80 |> to_u8()) != (0 |> to_u8()) &&
+    a.lxor(self.a).land(0x80 |> to_u8()) != (0 |> to_u8())
 }
 
 // SEC - Set carry flag
@@ -1011,7 +1011,7 @@ let instructions: FixedArray[(CPU, StepInfo) -> Unit] = [ // All 6502 instructio
 	opCPX, opSBC, opNOP, opISC, opCPX, opSBC, opINC, opISC,//E
 	opINX, opSBC, opNOP, opSBC, opCPX, opSBC, opINC, opISC,
 	opBEQ, opSBC, opKIL, opISC, opNOP, opSBC, opINC, opISC,//F
-	opSED, opSBC, opNOP, opISC, opNOP, opSBC, opINC, opISC,
+   opSED, opSBC, opNOP, opISC, opNOP, opSBC, opINC, opISC,
 ]
 
 // instructionNames indicates the name of each instruction
@@ -1068,7 +1068,7 @@ let
      9,   8,   5,   8,  11,  11,  11,  11,   5,   2,   5,   2,   1,   1,   1,   1,
      4,   6,   4,   6,  10,  10,  10,  10,   5,   4,   5,   4,   0,   0,   0,   0,
      9,   8,   5,   8,  11,  11,  11,  11,   5,   2,   5,   2,   1,   1,   1,   1,
-  ]
+]
 
 let
   instructionSizes: FixedArray[Int] = [ // Size in bytes
@@ -1088,7 +1088,7 @@ let
      2,   2,   0,   2,   2,   2,   2,   2,   1,   3,   1,   3,   3,   3,   3,   3,
      2,   2,   0,   2,   2,   2,   2,   2,   1,   2,   1,   2,   3,   3,   3,   3,
      2,   2,   0,   2,   2,   2,   2,   2,   1,   3,   1,   3,   3,   3,   3,   3,
-  ]
+]
 
 let
   instructionCycles: FixedArray[Int] = [ // Number of cycles used
@@ -1108,7 +1108,7 @@ let
      2,   5,   2,   8,   4,   4,   6,   6,   2,   4,   2,   7,   4,   4,   7,   7,
      2,   6,   2,   8,   3,   3,   5,   5,   2,   2,   2,   2,   4,   4,   6,   6,
      2,   5,   2,   8,   4,   4,   6,   6,   2,   4,   2,   7,   4,   4,   7,   7,
-  ]
+]
 
 let
   instructionPageCycles: FixedArray[Int] = [ // Cycles used on a page cross
@@ -1128,7 +1128,7 @@ let
      1,   1,   0,   0,   0,   0,   0,   0,   0,   1,   0,   0,   1,   1,   0,   0,
      0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
      1,   1,   0,   0,   0,   0,   0,   0,   0,   1,   0,   0,   1,   1,   0,   0,
-  ]
+]
 
 let
   instructionUnofficial: FixedArray[Int] = [ // 1 if official
@@ -1149,7 +1149,7 @@ let
      0,   0,   1,   1,   1,   0,   0,   1,   0,   0,   1,   1,   1,   0,   0,   1,//D
      0,   0,   1,   1,   0,   0,   0,   1,   0,   0,   0,   1,   0,   0,   0,   1,//E
      0,   0,   1,   1,   1,   0,   0,   1,   0,   0,   1,   1,   1,   0,   0,   1,//F
-  ]
+]
 
 
 // Non-maskable interrupt
@@ -1186,8 +1186,8 @@ fn get_addr(self : CPU, mode : AddressingMode) -> UInt16 {
       self.mem.read16bug(self.mem[self.pc + (1 |> to_u16)] + self.x |> to_u16)
     Indirect => self.mem.read16bug(self.mem.read16(self.pc + (1 |> to_u16)))
     IndirectIndexed =>
-      self.mem.read16bug(self.mem[self.pc + (1 |> to_u16)] |> to_u16) + (self.y
-      |> to_u16)
+      self.mem.read16bug(self.mem[self.pc + (1 |> to_u16)] |> to_u16) +
+      (self.y |> to_u16)
     ZeroPage => self.mem[self.pc + (1 |> to_u16)] |> to_u16
     ZeroPageX => self.mem[self.pc + (1 |> to_u16)] + self.x |> to_u16 // CHECKME
     ZeroPageY => self.mem[self.pc + (1 |> to_u16)] + self.y |> to_u16
@@ -1234,11 +1234,11 @@ fn step(self : CPU, trace_log : Bool) -> Int {
   let adr = self.get_addr(mode)
 
   // CHECKME: AbsoluteX can cross page too!
-  if mode == AbsoluteX && pagesDiffer(adr - (self.x |> to_u16), adr) || (
-    [AbsoluteY, IndirectIndexed] : FixedArray[AddressingMode]).contains(mode) && pagesDiffer(
-    adr - (self.y |> to_u16),
-    adr,
-  ) {
+  if (mode == AbsoluteX && pagesDiffer(adr - (self.x |> to_u16), adr)) ||
+    (
+      ([AbsoluteY, IndirectIndexed] : FixedArray[AddressingMode]).contains(mode) &&
+      pagesDiffer(adr - (self.y |> to_u16), adr)
+    ) {
     self.cycles += instructionPageCycles[opcode.0].to_int64()
   }
   self.pc += instructionSizes[opcode.0] |> to_u16
