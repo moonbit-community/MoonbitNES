@@ -197,19 +197,19 @@ let mirrorLookup = [
 ]
 
 fn mirrorAddress(mode : UInt8, adr : UInt16) -> UInt16 {
-  let adr = (adr - (0x2000 |> to_u16)).0 % 0x1000
+  let adr = (adr - (0x2000 |> to_u16))._ % 0x1000
   let table = adr / 0x0400 |> to_u8
   let offset = adr % 0x0400
 
   // TODO: do we need to do wrapped op every time?
-  mirrorLookup[mode.0][table.0] * 0x0400 + 0x2000 + offset |> to_u16
+  mirrorLookup[mode._][table._] * 0x0400 + 0x2000 + offset |> to_u16
 }
 
 fn paletteAdr(adr : UInt16) -> Int {
-  if adr >= (16 |> to_u16) && adr.0 % 4 == 0 {
-    adr.0 - 16
+  if adr >= (16 |> to_u16) && adr._ % 4 == 0 {
+    adr._ - 16
   } else {
-    adr.0
+    adr._
   }
 }
 
@@ -257,13 +257,13 @@ fn writePalette(self : PPU, adr : UInt16, val : UInt8) -> Unit {
 fn op_get(self : PPUMemory, adr : UInt16) -> UInt8 {
   let adr = adr % (0x4000 |> to_u16)
   let nes = self.nes.unwrap()
-  if adr.0 >= 0x0000 && adr.0 <= 0x1FFF {
+  if adr._ >= 0x0000 && adr._ <= 0x1FFF {
     let m = nes.mapper.unwrap()
     m[adr]
-  } else if adr.0 >= 0x2000 && adr.0 <= 0x3EFF {
+  } else if adr._ >= 0x2000 && adr._ <= 0x3EFF {
     let mode = nes.cartridge.mirror
-    nes.ppu.nameTableData[(mirrorAddress(mode, adr) % (2048 |> to_u16)).0]
-  } else if adr.0 >= 0x3F00 && adr.0 <= 0x3FFF {
+    nes.ppu.nameTableData[(mirrorAddress(mode, adr) % (2048 |> to_u16))._]
+  } else if adr._ >= 0x3F00 && adr._ <= 0x3FFF {
     nes.ppu.readPalette(adr % (32 |> to_u16))
   } else {
     0 |> to_u8
@@ -273,19 +273,19 @@ fn op_get(self : PPUMemory, adr : UInt16) -> UInt8 {
 fn op_set(self : PPUMemory, adr : UInt16, val : UInt8) -> Unit {
   let adr = adr % (0x4000 |> to_u16)
   let nes = self.nes.unwrap()
-  if adr.0 >= 0x0000 && adr.0 <= 0x1FFF {
+  if adr._ >= 0x0000 && adr._ <= 0x1FFF {
     let m = nes.mapper.unwrap()
     m[adr] = val
-  } else if adr.0 >= 0x2000 && adr.0 <= 0x3EFF {
+  } else if adr._ >= 0x2000 && adr._ <= 0x3EFF {
     let mode = nes.cartridge.mirror
-    nes.ppu.nameTableData[(mirrorAddress(mode, adr) % (2048 |> to_u16)).0] = val
-  } else if adr.0 >= 0x3F00 && adr.0 <= 0x3FFF {
+    nes.ppu.nameTableData[(mirrorAddress(mode, adr) % (2048 |> to_u16))._] = val
+  } else if adr._ >= 0x3F00 && adr._ <= 0x3FFF {
     nes.ppu.writePalette(adr % (32 |> to_u16), val)
   }
 }
 
 fn readRegister(self : PPU, adr : UInt16) -> UInt8 {
-  match adr.0 {
+  match adr._ {
     0x2002 => self.readStatus()
     0x2004 => self.readOAMData()
     0x2007 => self.readData()
@@ -295,7 +295,7 @@ fn readRegister(self : PPU, adr : UInt16) -> UInt8 {
 
 fn writeRegister(self : PPU, adr : UInt16, val : UInt8) -> Unit {
   self.register = val
-  match adr.0 {
+  match adr._ {
     0x2000 => self.writeControl(val)
     0x2001 => self.writeMask(val)
     0x2003 => self.writeOAMAddress(val)
@@ -359,7 +359,7 @@ fn writeOAMAddress(self : PPU, val : UInt8) -> Unit {
 
 // $2004: OAMDATA (read)
 fn readOAMData(self : PPU) -> UInt8 {
-  let mut data = self.oamData[self.oamAddress.0]
+  let mut data = self.oamData[self.oamAddress._]
   if self.oamAddress.land(0x03 |> to_u8) == (0x02 |> to_u8) {
     data = data.land(0xE3 |> to_u8)
   }
@@ -368,7 +368,7 @@ fn readOAMData(self : PPU) -> UInt8 {
 
 // $2004: OAMDATA (write)
 fn writeOAMData(self : PPU, val : UInt8) -> Unit {
-  self.oamData[self.oamAddress.0] = val
+  self.oamData[self.oamAddress._] = val
   self.oamAddress = self.oamAddress + (1 |> to_u8)
 }
 
@@ -425,7 +425,7 @@ fn readData(self : PPU) -> UInt8 {
   let mut val = self.mem[self.v]
 
   // emulate buffered reads
-  if self.v.0 % 0x4000 < 0x3F00 {
+  if self.v._ % 0x4000 < 0x3F00 {
     // (self.bufferedData, result) = (result, self.bufferedData)
     let buffered = self.bufferedData
     self.bufferedData = val
@@ -458,7 +458,7 @@ fn writeDMA(self : PPU, val : UInt8) -> Unit {
   for i = 0, adr = val.u16().lsl(8)
       i <= 255
       i = i + 1, adr = adr + (1 |> to_u16) {
-    self.oamData[self.oamAddress.0] = cpu.mem[adr]
+    self.oamData[self.oamAddress._] = cpu.mem[adr]
     self.oamAddress = self.oamAddress + (1 |> to_u8)
   }
   cpu.stall = cpu.stall + 513
@@ -543,7 +543,7 @@ fn setVerticalBlank(self : PPU) -> Unit {
   // transfer a frame image to host
   for row = 0; row < resolution.1; row = row + 1 {
     for col = 0; col < resolution.0; col = col + 1 {
-      let color = self.back.pixels[row][col].0
+      let color = self.back.pixels[row][col]._
       nes_write_color(
         row * resolution.0 + col,
         red=color.land(0xFF0000).lsr(16),
@@ -578,7 +578,7 @@ fn fetchAttributeTableByte(self : PPU) -> Unit {
   // shift := ((v >> 4) & 4) | (v & 2)
   let shift = v.lsr(4).land(4 |> to_u16).lor(v.land(2 |> to_u16)).u8()
   // ppu.attributeTableByte = ((ppu.Read(address) >> shift) & 3) << 2
-  self.attributeTable = self.mem[adr].lsr(shift.0).land(3 |> to_u8).lsl(2)
+  self.attributeTable = self.mem[adr].lsr(shift._).land(3 |> to_u8).lsl(2)
 }
 
 // fineY := (ppu.v >> 12) & 7
@@ -589,7 +589,7 @@ fn tileAdr(self : PPU) -> Int {
   let fineY = self.v.lsr(12).land(7 |> to_u16)
   let table = self.flagBackgroundTable
   let tile = self.nameTable
-  0x1000 * (table |> to_u8).0 + tile.0 * 16 + fineY.0
+  0x1000 * (table |> to_u8)._ + tile._ * 16 + fineY._
 }
 
 fn fetchLowTileByte(self : PPU) -> Unit {
@@ -609,7 +609,7 @@ fn storeTileData(self : PPU) -> Unit {
     self.lowTile = self.lowTile.lsl(1)
     self.highTile = self.highTile.lsl(1)
     continue i + 1,
-      data.lsl(4).lor(a.0.to_int64()).lor(p1.0.to_int64()).lor(p2.0.to_int64())
+      data.lsl(4).lor(a._.to_int64()).lor(p1._.to_int64()).lor(p2._.to_int64())
   } else { // data |= uint32(a | p1 | p2)
     data
   }
@@ -624,8 +624,8 @@ fn backgroundPixel(self : PPU) -> UInt8 {
   if not(self.flagShowBackground) {
     return 0 |> to_u8
   }
-  let data = self.fetchTileData().lsr((7 - self.x.0) * 4)
-  data.0.land(0x0F) |> to_u8
+  let data = self.fetchTileData().lsr((7 - self.x._) * 4)
+  data._.land(0x0F) |> to_u8
 }
 
 fn spritePixel(self : PPU) -> (UInt8, UInt8) {
@@ -635,7 +635,7 @@ fn spritePixel(self : PPU) -> (UInt8, UInt8) {
 
   //for i in 0 ..< ppu.spriteCount:
   for i = 0; i < self.spriteCount; {
-    let mut offset = self.cycle - 1 - self.spritePositions[i].0
+    let mut offset = self.cycle - 1 - self.spritePositions[i]._
     //if offset notin 0..7:
     // TODO: change to for ... in
     if offset < 0 || offset > 7 {
@@ -644,7 +644,7 @@ fn spritePixel(self : PPU) -> (UInt8, UInt8) {
     offset = 7 - offset
     // CHECKME
     let color = self.spritePatterns[i].lsr(offset * 4).land(0x0F |> to_u32).u8()
-    if color.0 % 4 == 0 {
+    if color._ % 4 == 0 {
       continue i + 1
     }
     return (i |> to_u8(), color)
@@ -666,8 +666,8 @@ fn renderPixel(self : PPU) -> Unit {
       sprite = 0 |> to_u8
     }
   }
-  let b = background.0 % 4 != 0
-  let s = sprite.0 % 4 != 0
+  let b = background._ % 4 != 0
+  let s = sprite._ % 4 != 0
   let mut color = 0 |> to_u8
   if not(b) && not(s) {
     color = 0 |> to_u8
@@ -676,16 +676,16 @@ fn renderPixel(self : PPU) -> Unit {
   } else if b && not(s) {
     color = background
   } else {
-    if self.spriteIndices[i.0] == (0 |> to_u8) && x < 255 {
+    if self.spriteIndices[i._] == (0 |> to_u8) && x < 255 {
       self.flagSpriteZeroHit = true
     }
-    if self.spritePriorities[i.0] == (0 |> to_u8) {
+    if self.spritePriorities[i._] == (0 |> to_u8) {
       color = sprite.lor(0x10 |> to_u8)
     } else {
       color = background
     }
   }
-  let c = palette[self.readPalette(color.u16()).0 % 64]
+  let c = palette[self.readPalette(color.u16())._ % 64]
   self.back.pixels[y][x] = c
 }
 
@@ -713,7 +713,7 @@ fn fetchSpritePattern(self : PPU, i : Int, row : Int) -> UInt32 {
   }
 
   // CHECK the coercion points
-  adr = (table.0 * 0x1000 |> to_u16) + (tile.0 * 16 |> to_u16) + (row
+  adr = (table._ * 0x1000 |> to_u16) + (tile._ * 16 |> to_u16) + (row
     |> to_u16())
   let a = attributes.land(3 |> to_u8).lsl(2)
   let mut lowTileByte = self.mem[adr]
@@ -745,7 +745,7 @@ fn evaluateSprites(self : PPU) -> Unit {
     let y = self.oamData[i * 4 + 0]
     let a = self.oamData[i * 4 + 2]
     let x = self.oamData[i * 4 + 3]
-    let row = self.scanLine - y.0
+    let row = self.scanLine - y._
     if row < 0 || row >= h {
       continue i + 1, count
     }

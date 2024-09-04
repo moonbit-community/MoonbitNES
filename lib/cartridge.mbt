@@ -86,8 +86,8 @@ fn newCartridge(data : FixedArray[Int]) -> Cartridge {
 
   // battery-backed RAM
   let battery = header.control1.lsr(1).land(1 |> to_u8) != (0 |> to_u8)
-  let prg_len = header.numPRG.0 * 16384
-  let chr_len = header.numCHR.0 * 8192
+  let prg_len = header.numPRG._ * 16384
+  let chr_len = header.numCHR._ * 8192
 
   // read trainer if present (unused)
   if header.control1.land(4 |> to_u8) == (4 |> to_u8) {

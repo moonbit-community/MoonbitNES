@@ -87,14 +87,14 @@ fn step(self : Mapper2) -> Unit {
 
 fn idx(self : Mapper2, adr : UInt16) -> UInt8 {
   if adr >= (0x0000 |> to_u16) && adr <= (0x1FFF |> to_u16) {
-    return self.cartridge.chr[adr.0]
+    return self.cartridge.chr[adr._]
   } else if adr >= (0x6000 |> to_u16) && adr <= (0x7FFF |> to_u16) {
-    return self.cartridge.sram[adr.0 - 0x6000]
+    return self.cartridge.sram[adr._ - 0x6000]
   } else if adr >= (0x8000 |> to_u16) && adr <= (0xBFFF |> to_u16) {
-    let offset = self.prgBank1 * 0x4000 + (adr.0 - 0x8000)
+    let offset = self.prgBank1 * 0x4000 + (adr._ - 0x8000)
     return self.cartridge.prg[offset]
   } else if adr >= (0xC000 |> to_u16) && adr <= (0xFFFF |> to_u16) {
-    let offset = self.prgBank2 * 0x4000 + (adr.0 - 0xC000)
+    let offset = self.prgBank2 * 0x4000 + (adr._ - 0xC000)
     return self.cartridge.prg[offset]
   } else {
     0 |> to_u8
@@ -103,11 +103,11 @@ fn idx(self : Mapper2, adr : UInt16) -> UInt8 {
 
 fn idxSet(self : Mapper2, adr : UInt16, val : UInt8) -> Unit {
   if adr >= (0x0000 |> to_u16) && adr <= (0x1FFF |> to_u16) {
-    self.cartridge.chr[adr.0] = val // "but most emulators support RAM"
+    self.cartridge.chr[adr._] = val // "but most emulators support RAM"
   } else if adr >= (0x6000 |> to_u16) && adr <= (0x7FFF |> to_u16) {
-    self.cartridge.sram[adr.0 - 0x6000] = val
+    self.cartridge.sram[adr._ - 0x6000] = val
   } else if adr >= (0x8000 |> to_u16) {
-    self.prgBank1 = val.0 % self.prgBanks
+    self.prgBank1 = val._ % self.prgBanks
   }
 }
 
@@ -152,7 +152,7 @@ fn step(self : Mapper1) -> Unit {
 }
 
 fn idx(self : Mapper1, adr : UInt16) -> UInt8 {
-  let mut address = adr.0
+  let mut address = adr._
   if address < 0x2000 {
     let bank = address / 0x1000
     let offset = address % 0x1000
@@ -170,7 +170,7 @@ fn idx(self : Mapper1, adr : UInt16) -> UInt8 {
 }
 
 fn idxSet(self : Mapper1, adr : UInt16, val : UInt8) -> Unit {
-  let address = adr.0
+  let address = adr._
   if address < 0x2000 {
     let bank = address / 0x1000
     let offset = address % 0x1000
@@ -200,7 +200,7 @@ fn loadRegister(self : Mapper1, adr : UInt16, value : UInt8) -> Unit {
 }
 
 fn writeRegister(self : Mapper1, adr : UInt16, value : UInt8) -> Unit {
-  let address = adr.0
+  let address = adr._
   if address <= 0x9FFF {
     self.writeControl(value)
   } else if address <= 0xBFFF {
@@ -218,7 +218,7 @@ fn writeControl(self : Mapper1, value : UInt8) -> Unit {
   self.chrMode = value.lsr(4).land(1 |> to_u8)
   self.prgMode = value.lsr(2).land(3 |> to_u8)
   let mirror = value.land(3 |> to_u8)
-  match mirror.0 {
+  match mirror._ {
     0 => self.cartridge.mirror = mirrorSingle0
     1 => self.cartridge.mirror = mirrorSingle1
     2 => self.cartridge.mirror = mirrorVertical
@@ -272,28 +272,28 @@ fn chrBankOffset(self : Mapper1, index : Int) -> Int {
 //                    3: fix last bank at $C000 and switch 16 KB bank at $8000)
 // CHR ROM bank mode (0: switch 8 KB at a time; 1: switch two separate 4 KB banks)
 fn updateOffsets(self : Mapper1) -> Unit {
-  match self.prgMode.0 {
+  match self.prgMode._ {
     0 | 1 => {
-      self.prgOffsets[0] = self.prgBankOffset(self.prgBank.0.land(0xFE))
-      self.prgOffsets[1] = self.prgBankOffset(self.prgBank.0.lor(0x01))
+      self.prgOffsets[0] = self.prgBankOffset(self.prgBank._.land(0xFE))
+      self.prgOffsets[1] = self.prgBankOffset(self.prgBank._.lor(0x01))
     }
     2 => {
       self.prgOffsets[0] = 0
-      self.prgOffsets[1] = self.prgBankOffset(self.prgBank.0)
+      self.prgOffsets[1] = self.prgBankOffset(self.prgBank._)
     }
     3 => {
-      self.prgOffsets[0] = self.prgBankOffset(self.prgBank.0)
+      self.prgOffsets[0] = self.prgBankOffset(self.prgBank._)
       self.prgOffsets[1] = self.prgBankOffset(-1)
     }
   }
-  match self.chrMode.0 {
+  match self.chrMode._ {
     0 => {
-      self.chrOffsets[0] = self.chrBankOffset(self.chrBank0.0.land(0xFE))
-      self.chrOffsets[1] = self.chrBankOffset(self.chrBank0.0.lor(0x01))
+      self.chrOffsets[0] = self.chrBankOffset(self.chrBank0._.land(0xFE))
+      self.chrOffsets[1] = self.chrBankOffset(self.chrBank0._.lor(0x01))
     }
     1 => {
-      self.chrOffsets[0] = self.chrBankOffset(self.chrBank0.0)
-      self.chrOffsets[1] = self.chrBankOffset(self.chrBank1.0)
+      self.chrOffsets[0] = self.chrBankOffset(self.chrBank0._)
+      self.chrOffsets[1] = self.chrBankOffset(self.chrBank1._)
     }
   }
 }
@@ -338,16 +338,16 @@ fn step(self : Mapper3) -> Unit {
 
 fn idx(self : Mapper3, adr : UInt16) -> UInt8 {
   if adr < (0x2000 |> to_u16) {
-    let index = self.chrBank * 0x2000 + adr.0
+    let index = self.chrBank * 0x2000 + adr._
     self.cartridge.chr[index]
   } else if adr >= (0xC000 |> to_u16) {
-    let index = self.prgBank2 * 0x4000 + (adr.0 - 0xC000)
+    let index = self.prgBank2 * 0x4000 + (adr._ - 0xC000)
     self.cartridge.prg[index]
   } else if adr >= (0x8000 |> to_u16) {
-    let index = self.prgBank1 * 0x4000 + (adr.0 - 0x8000)
+    let index = self.prgBank1 * 0x4000 + (adr._ - 0x8000)
     self.cartridge.prg[index]
   } else if adr >= (0x6000 |> to_u16) {
-    let index = adr.0 - 0x6000
+    let index = adr._ - 0x6000
     self.cartridge.sram[index]
   } else {
     abort("unhandled mapper3 read")
@@ -356,12 +356,12 @@ fn idx(self : Mapper3, adr : UInt16) -> UInt8 {
 
 fn idxSet(self : Mapper3, adr : UInt16, val : UInt8) -> Unit {
   if adr < (0x2000 |> to_u16) {
-    let index = self.chrBank * 0x2000 + adr.0
+    let index = self.chrBank * 0x2000 + adr._
     self.cartridge.chr[index] = val
   } else if adr >= (0x8000 |> to_u16) {
-    self.chrBank = val.0.land(3)
+    self.chrBank = val._.land(3)
   } else if adr >= (0x6000 |> to_u16) {
-    let index = adr.0 - 0x6000
+    let index = adr._ - 0x6000
     self.cartridge.sram[index] = val
   } else {
     abort("unhandled mapper3 write")
@@ -412,7 +412,7 @@ fn step(self : Mapper4) -> Unit {
 }
 
 fn idx(self : Mapper4, adr : UInt16) -> UInt8 {
-  let mut address = adr.0
+  let mut address = adr._
   if address < 0x2000 {
     let bank = address / 0x0400
     let offset = address % 0x0400
@@ -431,7 +431,7 @@ fn idx(self : Mapper4, adr : UInt16) -> UInt8 {
 }
 
 fn idxSet(self : Mapper4, adr : UInt16, val : UInt8) -> Unit {
-  let address = adr.0
+  let address = adr._
   if address < 0x2000 {
     let bank = address / 0x0400
     let offset = address % 0x0400
@@ -457,7 +457,7 @@ fn handleScanLine(self : Mapper4) -> Unit {
 }
 
 fn writeRegister(self : Mapper4, adr : UInt16, value : UInt8) -> Unit {
-  let address = adr.0
+  let address = adr._
   if address <= 0x9FFF && address % 2 == 0 {
     self.writeBankSelect(value)
   } else if address <= 0x9FFF && address % 2 == 1 {
@@ -485,12 +485,12 @@ fn writeBankSelect(self : Mapper4, value : UInt8) -> Unit {
 }
 
 fn writeBankData(self : Mapper4, value : UInt8) -> Unit {
-  self.registers[self.register.0] = value
+  self.registers[self.register._] = value
   self.updateOffsets()
 }
 
 fn writeMirror(self : Mapper4, value : UInt8) -> Unit {
-  match value.0.land(1) {
+  match value._.land(1) {
     0 => self.cartridge.mirror = mirrorVertical
     1 => self.cartridge.mirror = mirrorHorizontal
   }
@@ -539,40 +539,40 @@ fn chrBankOffset(self : Mapper4, index : Int) -> Int {
 }
 
 fn updateOffsets(self : Mapper4) -> Unit {
-  match self.prgMode.0 {
+  match self.prgMode._ {
     0 => {
-      self.prgOffsets[0] = self.prgBankOffset(self.registers[6].0)
-      self.prgOffsets[1] = self.prgBankOffset(self.registers[7].0)
+      self.prgOffsets[0] = self.prgBankOffset(self.registers[6]._)
+      self.prgOffsets[1] = self.prgBankOffset(self.registers[7]._)
       self.prgOffsets[2] = self.prgBankOffset(-2)
       self.prgOffsets[3] = self.prgBankOffset(-1)
     }
     1 => {
       self.prgOffsets[0] = self.prgBankOffset(-2)
-      self.prgOffsets[1] = self.prgBankOffset(self.registers[7].0)
-      self.prgOffsets[2] = self.prgBankOffset(self.registers[6].0)
+      self.prgOffsets[1] = self.prgBankOffset(self.registers[7]._)
+      self.prgOffsets[2] = self.prgBankOffset(self.registers[6]._)
       self.prgOffsets[3] = self.prgBankOffset(-1)
     }
   }
-  match self.chrMode.0 {
+  match self.chrMode._ {
     0 => {
-      self.chrOffsets[0] = self.chrBankOffset(self.registers[0].0.land(0xFE))
-      self.chrOffsets[1] = self.chrBankOffset(self.registers[0].0.lor(0x01))
-      self.chrOffsets[2] = self.chrBankOffset(self.registers[1].0.land(0xFE))
-      self.chrOffsets[3] = self.chrBankOffset(self.registers[1].0.lor(0x01))
-      self.chrOffsets[4] = self.chrBankOffset(self.registers[2].0)
-      self.chrOffsets[5] = self.chrBankOffset(self.registers[3].0)
-      self.chrOffsets[6] = self.chrBankOffset(self.registers[4].0)
-      self.chrOffsets[7] = self.chrBankOffset(self.registers[5].0)
+      self.chrOffsets[0] = self.chrBankOffset(self.registers[0]._.land(0xFE))
+      self.chrOffsets[1] = self.chrBankOffset(self.registers[0]._.lor(0x01))
+      self.chrOffsets[2] = self.chrBankOffset(self.registers[1]._.land(0xFE))
+      self.chrOffsets[3] = self.chrBankOffset(self.registers[1]._.lor(0x01))
+      self.chrOffsets[4] = self.chrBankOffset(self.registers[2]._)
+      self.chrOffsets[5] = self.chrBankOffset(self.registers[3]._)
+      self.chrOffsets[6] = self.chrBankOffset(self.registers[4]._)
+      self.chrOffsets[7] = self.chrBankOffset(self.registers[5]._)
     }
     1 => {
-      self.chrOffsets[0] = self.chrBankOffset(self.registers[2].0)
-      self.chrOffsets[1] = self.chrBankOffset(self.registers[3].0)
-      self.chrOffsets[2] = self.chrBankOffset(self.registers[4].0)
-      self.chrOffsets[3] = self.chrBankOffset(self.registers[5].0)
-      self.chrOffsets[4] = self.chrBankOffset(self.registers[0].0.land(0xFE))
-      self.chrOffsets[5] = self.chrBankOffset(self.registers[0].0.lor(0x01))
-      self.chrOffsets[6] = self.chrBankOffset(self.registers[1].0.land(0xFE))
-      self.chrOffsets[7] = self.chrBankOffset(self.registers[1].0.lor(0x01))
+      self.chrOffsets[0] = self.chrBankOffset(self.registers[2]._)
+      self.chrOffsets[1] = self.chrBankOffset(self.registers[3]._)
+      self.chrOffsets[2] = self.chrBankOffset(self.registers[4]._)
+      self.chrOffsets[3] = self.chrBankOffset(self.registers[5]._)
+      self.chrOffsets[4] = self.chrBankOffset(self.registers[0]._.land(0xFE))
+      self.chrOffsets[5] = self.chrBankOffset(self.registers[0]._.lor(0x01))
+      self.chrOffsets[6] = self.chrBankOffset(self.registers[1]._.land(0xFE))
+      self.chrOffsets[7] = self.chrBankOffset(self.registers[1]._.lor(0x01))
     }
   }
 }
@@ -637,7 +637,7 @@ fn newMapper7(self : NES) -> Mapper {
 // why pass NES instead of Cartridge? Because Mapper4 needs it, so we'll need it in future
 fn Mapper::new(nes : NES) -> Mapper {
   println("creating mapper")
-  match nes.cartridge.mapper.0 {
+  match nes.cartridge.mapper._ {
     0 | 2 => newMapper2(nes)
     1 => newMapper1(nes)
     3 => newMapper3(nes)

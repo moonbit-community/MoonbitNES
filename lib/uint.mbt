@@ -52,32 +52,32 @@ impl U32 for Int with u32(i : Int) -> UInt32 { UInt32(i) }
 impl U64 for Int64 with u64(i : Int64) -> UInt64 { UInt64(i) }
 
 fn to_string(self : UInt8) -> String {
-  self.0.to_string()
+  self._.to_string()
 }
 
 fn to_string(self : UInt16) -> String {
-  self.0.to_string()
+  self._.to_string()
 }
 
 // TODO: test u8 arithmetic
 fn op_add(self : UInt8, rhs : UInt8) -> UInt8 {
-  self.0 + rhs.0 |> to_u8
+  self._ + rhs._ |> to_u8
 }
 
 fn op_sub(self : UInt8, rhs : UInt8) -> UInt8 {
-  self.0 - rhs.0 |> to_u8
+  self._ - rhs._ |> to_u8
 }
 
 fn op_add(self : UInt16, rhs : UInt16) -> UInt16 {
-  self.0 + rhs.0 |> to_u16
+  self._ + rhs._ |> to_u16
 }
 
 fn op_sub(self : UInt16, rhs : UInt16) -> UInt16 {
-  self.0 - rhs.0 |> to_u16
+  self._ - rhs._ |> to_u16
 }
 
 fn op_mod(self : UInt16, rhs : UInt16) -> UInt16 {
-  self.0 % rhs.0 |> to_u16
+  self._ % rhs._ |> to_u16
 }
 
 impl U8 for Bool with u8(self : Bool) -> UInt8 {
@@ -94,92 +94,92 @@ fn formatHex(self : UInt8) -> String {
 }
 
 fn u8(self : UInt16) -> UInt8 {
-  self.0 |> to_u8
+  self._ |> to_u8
 }
 
 fn u8(self : UInt32) -> UInt8 {
-  self.0 |> to_u8
+  self._ |> to_u8
 }
 
 fn u16(self : UInt8) -> UInt16 {
-  self.0 |> to_u16
+  self._ |> to_u16
 }
 
 fn u32(self : UInt64) -> UInt32 {
-  self.0.to_int() |> to_u32
+  self._.to_int() |> to_u32
 }
 
 fn u64(self : UInt32) -> UInt64 {
-  self.0.to_int64() |> to_u64
+  self._.to_int64() |> to_u64
 }
 
 fn u64(self : UInt8) -> UInt64 {
-  self.0.to_int64() |> to_u64
+  self._.to_int64() |> to_u64
 }
 
 // `bit` is usually a constant, so `Int` is easier to use
 fn lsl(self : UInt8, bit : Int) -> UInt8 {
-  self.0.lsl(bit) |> to_u8
+  self._.lsl(bit) |> to_u8
 }
 
 fn lsl(self : UInt16, bit : Int) -> UInt16 {
-  self.0.lsl(bit) |> to_u16
+  self._.lsl(bit) |> to_u16
 }
 
 fn lsl(self : UInt64, bit : Int) -> UInt64 {
-  self.0.lsl(bit) |> to_u64
+  self._.lsl(bit) |> to_u64
 }
 
 fn lsr(self : UInt8, bit : Int) -> UInt8 {
-  self.0.lsr(bit) |> to_u8
+  self._.lsr(bit) |> to_u8
 }
 
 fn lsr(self : UInt16, bit : Int) -> UInt16 {
-  self.0.lsr(bit) |> to_u16
+  self._.lsr(bit) |> to_u16
 }
 
 fn lsr(self : UInt32, bit : Int) -> UInt32 {
-  self.0.lsr(bit) |> to_u32
+  self._.lsr(bit) |> to_u32
 }
 
 fn lsr(self : UInt64, bit : Int) -> UInt64 {
-  self.0.lsr(bit) |> to_u64
+  self._.lsr(bit) |> to_u64
 }
 
 fn lor(self : UInt8, bit : UInt8) -> UInt8 {
-  self.0.lor(bit.0) |> to_u8
+  self._.lor(bit._) |> to_u8
 }
 
 fn lor(self : UInt16, bit : UInt16) -> UInt16 {
-  self.0.lor(bit.0) |> to_u16
+  self._.lor(bit._) |> to_u16
 }
 
 fn lor(self : UInt64, bit : UInt64) -> UInt64 {
-  self.0.lor(bit.0) |> to_u64
+  self._.lor(bit._) |> to_u64
 }
 
 fn land(self : UInt8, rhs : UInt8) -> UInt8 {
-  self.0.land(rhs.0) |> to_u8
+  self._.land(rhs._) |> to_u8
 }
 
 fn land(self : UInt16, rhs : UInt16) -> UInt16 {
-  self.0.land(rhs.0) |> to_u16
+  self._.land(rhs._) |> to_u16
 }
 
 fn land(self : UInt32, rhs : UInt32) -> UInt32 {
-  self.0.land(rhs.0) |> to_u32
+  self._.land(rhs._) |> to_u32
 }
 
 fn lxor(self : UInt8, rhs : UInt8) -> UInt8 {
-  self.0.lxor(rhs.0) |> to_u8
+  self._.lxor(rhs._) |> to_u8
 }
 
 fn lxor(self : UInt16, rhs : UInt16) -> UInt16 {
-  self.0.lxor(rhs.0) |> to_u16
+  self._.lxor(rhs._) |> to_u16
 }
 
 fn bit(self : UInt8, bit : Int) -> Bool {
-  self.lsr(bit).land(1 |> to_u8).0 == 1
+  self.lsr(bit).land(1 |> to_u8)._ == 1
 }
 
 fn to_hex_digit(i : Int) -> String {
@@ -188,11 +188,11 @@ fn to_hex_digit(i : Int) -> String {
 }
 
 fn to_hex(self : UInt8) -> String {
-  (self.0.lsr(4) |> to_hex_digit) + (self.0.land(0xf) |> to_hex_digit())
+  (self._.lsr(4) |> to_hex_digit) + (self._.land(0xf) |> to_hex_digit())
 }
 
 fn to_hex(self : UInt16) -> String {
-  (self.0.lsr(8) |> to_u8).to_hex() + (self.0.land(0xff) |> to_u8).to_hex()
+  (self._.lsr(8) |> to_u8).to_hex() + (self._.land(0xff) |> to_u8).to_hex()
 }
 
 fn to_byte(
