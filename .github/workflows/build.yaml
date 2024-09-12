@@ -12,19 +12,14 @@ jobs:
         steps:
             - uses: actions/checkout@v4
             - name: install-ubuntu
-              if: ${{ matrix.os == 'ubuntu-latest' }}
+              if: ${{ matrix.os != 'windows-latest' }}
               run: |
-                /bin/bash -c "$(curl -fsSL https://cli.moonbitlang.com/ubuntu_x86_64_moon_setup.sh)"
-                echo "/home/runner/.moon/bin" >> $GITHUB_PATH
-            - name: install-macos
-              if: ${{ matrix.os == 'macos-latest' }}
-              run: |
-                /bin/bash -c "$(curl -fsSL https://cli.moonbitlang.com/mac_intel_moon_setup.sh)"
-                echo "/Users/runner/.moon/bin" >> $GITHUB_PATH
+                curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+                echo "$HOME/.moon/bin" >> $GITHUB_PATH
             - name: install-windows
               if: ${{ matrix.os == 'windows-latest' }}
               run: |
-                Set-ExecutionPolicy RemoteSigned -Scope CurrentUser; irm https://cli.moonbitlang.cn/windows_moon_setup.ps1 | iex
+                Set-ExecutionPolicy RemoteSigned -Scope CurrentUser; irm https://cli.moonbitlang.com/install/powershell.ps1 | iex
                 "C:\Users\runneradmin\.moon\bin" | Out-File -FilePath $env:GITHUB_PATH -Append
 
             - name: moon check
