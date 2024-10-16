@@ -74,23 +74,29 @@ fn newCartridge(data : FixedArray[Int]) -> Cartridge {
   println("iNESMagic matched!!!")
 
   // mapper type
-  let mapper1 = header.control1.lsr(4)
-  let mapper2 = header.control2.lsr(4)
-  let mapper = mapper1.lor(mapper2.lsl(4))
+  let mapper1 = header.control1 >> 4
+  let mapper2 = header.control2 >> 4
+  let mapper = mapper1 | (mapper2 << 4)
   println("mapper: \{mapper})")
 
   // mirroring type
-  let mirror1 = header.control1.land(1 |> to_u8)
-  let mirror2 = header.control1.lsr(3).land(1 |> to_u8)
-  let mirror = mirror1.lor(mirror2.lsl(1))
+  let mirror1 = header.control1 & (1 |> to_u8)
+  let mirror2 = (header.control1 >> 3) & (1 |> to_u8)
+  let mirror = mirror1 | (mirror2 << 1)
+  let battery = (
+      (
 
-  // battery-backed RAM
-  let battery = header.control1.lsr(1).land(1 |> to_u8) != (0 |> to_u8)
+      // battery-backed RAM
+        header.control1 >> 1
+      ) &
+      (1 |> to_u8)
+    ) !=
+    (0 |> to_u8)
   let prg_len = header.numPRG._ * 16384
   let chr_len = header.numCHR._ * 8192
 
   // read trainer if present (unused)
-  if header.control1.land(4 |> to_u8) == (4 |> to_u8) {
+  if (header.control1 & (4 |> to_u8)) == (4 |> to_u8) {
     // read trainer. It's not used, but must read it
     let _ = reader.readUInt8Array(512)
     println("has trainer")

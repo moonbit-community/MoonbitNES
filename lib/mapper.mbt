@@ -185,13 +185,13 @@ fn idxSet(self : Mapper1, adr : UInt16, val : UInt8) -> Unit {
 }
 
 fn loadRegister(self : Mapper1, adr : UInt16, value : UInt8) -> Unit {
-  if value.land(0x80 |> to_u8) == (0x80 |> to_u8) {
+  if (value & (0x80 |> to_u8)) == (0x80 |> to_u8) {
     self.shiftRegister = 0x10 |> to_u8
-    self.writeControl(self.control.lor(0x0C |> to_u8))
+    self.writeControl(self.control | (0x0C |> to_u8))
   } else {
-    let complete = self.shiftRegister.land(1 |> to_u8) == (1 |> to_u8)
-    self.shiftRegister = self.shiftRegister.lsr(1)
-    self.shiftRegister = self.shiftRegister.lor(value.land(1 |> to_u8).lsl(4))
+    let complete = (self.shiftRegister & (1 |> to_u8)) == (1 |> to_u8)
+    self.shiftRegister = self.shiftRegister >> 1
+    self.shiftRegister = self.shiftRegister | ((value & (1 |> to_u8)) << 4)
     if complete {
       self.writeRegister(adr, self.shiftRegister)
       self.shiftRegister = 0x10 |> to_u8
@@ -215,9 +215,9 @@ fn writeRegister(self : Mapper1, adr : UInt16, value : UInt8) -> Unit {
 // Control (internal, $8000-$9FFF)
 fn writeControl(self : Mapper1, value : UInt8) -> Unit {
   self.control = value
-  self.chrMode = value.lsr(4).land(1 |> to_u8)
-  self.prgMode = value.lsr(2).land(3 |> to_u8)
-  let mirror = value.land(3 |> to_u8)
+  self.chrMode = (value >> 4) & (1 |> to_u8)
+  self.prgMode = (value >> 2) & (3 |> to_u8)
+  let mirror = value & (3 |> to_u8)
   match mirror._ {
     0 => self.cartridge.mirror = mirrorSingle0
     1 => self.cartridge.mirror = mirrorSingle1
@@ -241,12 +241,12 @@ fn writeCHRBank1(self : Mapper1, value : UInt8) -> Unit {
 
 // PRG bank (internal, $E000-$FFFF)
 fn writePRGBank(self : Mapper1, value : UInt8) -> Unit {
-  self.prgBank = value.land(0x0F |> to_u8)
+  self.prgBank = value & (0x0F |> to_u8)
   self.updateOffsets()
 }
 
 fn prgBankOffset(self : Mapper1, index : Int) -> Int {
-  let index = if index >= 0x80 { index - 0x100 } else { index } %
+  let index = (if index >= 0x80 { index - 0x100 } else { index }) %
     (self.cartridge.prg.length() / 0x4000)
   let offset = index * 0x4000
   if offset < 0 {
@@ -257,7 +257,7 @@ fn prgBankOffset(self : Mapper1, index : Int) -> Int {
 }
 
 fn chrBankOffset(self : Mapper1, index : Int) -> Int {
-  let index = if index >= 0x80 { index - 0x100 } else { index } %
+  let index = (if index >= 0x80 { index - 0x100 } else { index }) %
     (self.cartridge.chr.length() / 0x1000)
   let offset = index * 0x1000
   if offset < 0 {
@@ -274,8 +274,8 @@ fn chrBankOffset(self : Mapper1, index : Int) -> Int {
 fn updateOffsets(self : Mapper1) -> Unit {
   match self.prgMode._ {
     0 | 1 => {
-      self.prgOffsets[0] = self.prgBankOffset(self.prgBank._.land(0xFE))
-      self.prgOffsets[1] = self.prgBankOffset(self.prgBank._.lor(0x01))
+      self.prgOffsets[0] = self.prgBankOffset(self.prgBank._ & 0xFE)
+      self.prgOffsets[1] = self.prgBankOffset(self.prgBank._ | 0x01)
     }
     2 => {
       self.prgOffsets[0] = 0
@@ -288,8 +288,8 @@ fn updateOffsets(self : Mapper1) -> Unit {
   }
   match self.chrMode._ {
     0 => {
-      self.chrOffsets[0] = self.chrBankOffset(self.chrBank0._.land(0xFE))
-      self.chrOffsets[1] = self.chrBankOffset(self.chrBank0._.lor(0x01))
+      self.chrOffsets[0] = self.chrBankOffset(self.chrBank0._ & 0xFE)
+      self.chrOffsets[1] = self.chrBankOffset(self.chrBank0._ | 0x01)
     }
     1 => {
       self.chrOffsets[0] = self.chrBankOffset(self.chrBank0._)
@@ -359,7 +359,7 @@ fn idxSet(self : Mapper3, adr : UInt16, val : UInt8) -> Unit {
     let index = self.chrBank * 0x2000 + adr._
     self.cartridge.chr[index] = val
   } else if adr >= (0x8000 |> to_u16) {
-    self.chrBank = val._.land(3)
+    self.chrBank = val._ & 3
   } else if adr >= (0x6000 |> to_u16) {
     let index = adr._ - 0x6000
     self.cartridge.sram[index] = val
@@ -478,9 +478,9 @@ fn writeRegister(self : Mapper4, adr : UInt16, value : UInt8) -> Unit {
 }
 
 fn writeBankSelect(self : Mapper4, value : UInt8) -> Unit {
-  self.prgMode = value.lsr(6).land(1 |> to_u8)
-  self.chrMode = value.lsr(7).land(1 |> to_u8)
-  self.register = value.land(7 |> to_u8)
+  self.prgMode = (value >> 6) & (1 |> to_u8)
+  self.chrMode = (value >> 7) & (1 |> to_u8)
+  self.register = value & (7 |> to_u8)
   self.updateOffsets()
 }
 
@@ -490,7 +490,7 @@ fn writeBankData(self : Mapper4, value : UInt8) -> Unit {
 }
 
 fn writeMirror(self : Mapper4, value : UInt8) -> Unit {
-  match value._.land(1) {
+  match value._ & 1 {
     0 => self.cartridge.mirror = mirrorVertical
     1 => self.cartridge.mirror = mirrorHorizontal
   }
@@ -517,7 +517,7 @@ fn writeIRQEnable(self : Mapper4, value : UInt8) -> Unit {
 }
 
 fn prgBankOffset(self : Mapper4, index : Int) -> Int {
-  let index = if index >= 0x80 { index - 0x100 } else { index } %
+  let index = (if index >= 0x80 { index - 0x100 } else { index }) %
     (self.cartridge.prg.length() / 0x2000)
   let offset = index * 0x2000
   if offset < 0 {
@@ -528,7 +528,7 @@ fn prgBankOffset(self : Mapper4, index : Int) -> Int {
 }
 
 fn chrBankOffset(self : Mapper4, index : Int) -> Int {
-  let index = if index >= 0x80 { index - 0x100 } else { index } %
+  let index = (if index >= 0x80 { index - 0x100 } else { index }) %
     (self.cartridge.chr.length() / 0x0400)
   let offset = index * 0x0400
   if offset < 0 {
@@ -555,10 +555,10 @@ fn updateOffsets(self : Mapper4) -> Unit {
   }
   match self.chrMode._ {
     0 => {
-      self.chrOffsets[0] = self.chrBankOffset(self.registers[0]._.land(0xFE))
-      self.chrOffsets[1] = self.chrBankOffset(self.registers[0]._.lor(0x01))
-      self.chrOffsets[2] = self.chrBankOffset(self.registers[1]._.land(0xFE))
-      self.chrOffsets[3] = self.chrBankOffset(self.registers[1]._.lor(0x01))
+      self.chrOffsets[0] = self.chrBankOffset(self.registers[0]._ & 0xFE)
+      self.chrOffsets[1] = self.chrBankOffset(self.registers[0]._ | 0x01)
+      self.chrOffsets[2] = self.chrBankOffset(self.registers[1]._ & 0xFE)
+      self.chrOffsets[3] = self.chrBankOffset(self.registers[1]._ | 0x01)
       self.chrOffsets[4] = self.chrBankOffset(self.registers[2]._)
       self.chrOffsets[5] = self.chrBankOffset(self.registers[3]._)
       self.chrOffsets[6] = self.chrBankOffset(self.registers[4]._)
@@ -569,10 +569,10 @@ fn updateOffsets(self : Mapper4) -> Unit {
       self.chrOffsets[1] = self.chrBankOffset(self.registers[3]._)
       self.chrOffsets[2] = self.chrBankOffset(self.registers[4]._)
       self.chrOffsets[3] = self.chrBankOffset(self.registers[5]._)
-      self.chrOffsets[4] = self.chrBankOffset(self.registers[0]._.land(0xFE))
-      self.chrOffsets[5] = self.chrBankOffset(self.registers[0]._.lor(0x01))
-      self.chrOffsets[6] = self.chrBankOffset(self.registers[1]._.land(0xFE))
-      self.chrOffsets[7] = self.chrBankOffset(self.registers[1]._.lor(0x01))
+      self.chrOffsets[4] = self.chrBankOffset(self.registers[0]._ & 0xFE)
+      self.chrOffsets[5] = self.chrBankOffset(self.registers[0]._ | 0x01)
+      self.chrOffsets[6] = self.chrBankOffset(self.registers[1]._ & 0xFE)
+      self.chrOffsets[7] = self.chrBankOffset(self.registers[1]._ | 0x01)
     }
   }
 }

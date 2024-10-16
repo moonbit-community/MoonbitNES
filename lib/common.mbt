@@ -14,19 +14,17 @@ fn MemoryReader::new(data : FixedArray[Int]) -> MemoryReader {
 
 // copied from official example `bytes-buffer`
 fn bytes_to_int_be(bytes : FixedArray[Int], start : Int) -> Int {
-  bytes[start].land(0xff).lsl(24).lor(
-    bytes[start + 1].land(0xff).lsl(16).lor(
-      bytes[start + 2].land(0xff).lsl(8).lor(bytes[start + 3].land(0xff)),
-    ),
-  )
+  ((bytes[start] & 0xff) << 24) |
+  ((bytes[start + 1] & 0xff) << 16) |
+  ((bytes[start + 2] & 0xff) << 8) |
+  (bytes[start + 3] & 0xff)
 }
 
 fn bytes_to_int_le(bytes : FixedArray[Int], start : Int) -> Int {
-  bytes[start + 3].land(0xff).lsl(24).lor(
-    bytes[start + 2].land(0xff).lsl(16).lor(
-      bytes[start + 1].land(0xff).lsl(8).lor(bytes[start + 0].land(0xff)),
-    ),
-  )
+  ((bytes[start + 3] & 0xff) << 24) |
+  ((bytes[start + 2] & 0xff) << 16) |
+  ((bytes[start + 1] & 0xff) << 8) |
+  (bytes[start + 0] & 0xff)
 }
 
 // big endian

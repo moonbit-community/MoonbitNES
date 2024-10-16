@@ -310,7 +310,7 @@ fn writeRegister(self : PPU, adr : UInt16, val : UInt8) -> Unit {
 
 // $2000: PPUCTRL
 fn writeControl(self : PPU, val : UInt8) -> Unit {
-  self.flagNameTable = val.land(3 |> to_u8)
+  self.flagNameTable = val & (3 |> to_u8)
   self.flagIncrement = val.bit(2)
   self.flagSpriteTable = val.bit(3)
   self.flagBackgroundTable = val.bit(4)
@@ -320,9 +320,8 @@ fn writeControl(self : PPU, val : UInt8) -> Unit {
   self.nmiChange()
   // t: ....BA.. ........ = d: ......BA
   //ppu.t = (ppu.t & 0xF3FF) | ((uint16(value) & 0x03) << 10)
-  self.t = self.t.land(0xF3FF |> to_u16).lor(
-    val.u16().land(0x03 |> to_u16).lsl(10),
-  )
+  self.t = (self.t & (0xF3FF |> to_u16)) |
+    ((val.u16() & (0x03 |> to_u16)) << 10)
 }
 
 // $2001: PPUMASK
@@ -340,11 +339,11 @@ fn writeMask(self : PPU, val : UInt8) -> Unit {
 // $2002: PPUSTATUS
 fn readStatus(self : PPU) -> UInt8 {
   // TODO: wait for bitwise operators
-  let mut result = self.register.land(0x1F |> to_u8)
-  result = result.lor((self.flagSpriteOverflow |> to_u8()).lsl(5))
-  result = result.lor((self.flagSpriteZeroHit |> to_u8()).lsl(6))
+  let mut result = self.register & (0x1F |> to_u8)
+  result = result | ((self.flagSpriteOverflow |> to_u8()) << 5)
+  result = result | ((self.flagSpriteZeroHit |> to_u8()) << 6)
   if self.nmiOccured {
-    result = result.lor((1 |> to_u8).lsl(7))
+    result = result | ((1 |> to_u8) << 7)
   }
   self.nmiOccured = false
   self.nmiChange()
@@ -360,8 +359,8 @@ fn writeOAMAddress(self : PPU, val : UInt8) -> Unit {
 // $2004: OAMDATA (read)
 fn readOAMData(self : PPU) -> UInt8 {
   let mut data = self.oamData[self.oamAddress._]
-  if self.oamAddress.land(0x03 |> to_u8) == (0x02 |> to_u8) {
-    data = data.land(0xE3 |> to_u8)
+  if (self.oamAddress & (0x03 |> to_u8)) == (0x02 |> to_u8) {
+    data = data & (0xE3 |> to_u8)
   }
   return data
 }
@@ -380,20 +379,18 @@ fn writeScroll(self : PPU, val : UInt8) -> Unit {
     // w:                   = 1
     //ppu.t = (ppu.t & 0xFFE0) | (uint16(value) >> 3)
     //ppu.x = value & 0x07
-    self.t = self.t.land(0xFFE0 |> to_u16).lor(val.u16().lsr(3))
-    self.x = val.land(0x07 |> to_u8)
+    self.t = (self.t & (0xFFE0 |> to_u16)) | (val.u16() >> 3)
+    self.x = val & (0x07 |> to_u8)
     self.w = 1 |> to_u8
   } else {
     // t: .CBA..HG FED..... = d: HGFEDCBA
     // w:                   = 0
     //ppu.t = (ppu.t & 0x8FFF) | ((uint16(value) & 0x07) << 12)
     //ppu.t = (ppu.t & 0xFC1F) | ((uint16(value) & 0xF8) << 2)
-    self.t = self.t.land(0x8FFF |> to_u16).lor(
-      val.u16().land(0x07 |> to_u16).lsl(12),
-    )
-    self.t = self.t.land(0xFC1F |> to_u16).lor(
-      val.u16().land(0xF8 |> to_u16).lsl(2),
-    )
+    self.t = (self.t & (0x8FFF |> to_u16)) |
+      ((val.u16() & (0x07 |> to_u16)) << 12)
+    self.t = (self.t & (0xFC1F |> to_u16)) |
+      ((val.u16() & (0xF8 |> to_u16)) << 2)
     self.w = 0 |> to_u8
   }
 }
@@ -405,16 +402,15 @@ fn writeAddress(self : PPU, val : UInt8) -> Unit {
     // t: .X...... ........ = 0
     // w:                   = 1
     //ppu.t = (ppu.t & 0x80FF) | ((uint16(value) & 0x3F) << 8)
-    self.t = self.t.land(0x80FF |> to_u16).lor(
-      val.u16().land(0x3F |> to_u16).lsl(8),
-    )
+    self.t = (self.t & (0x80FF |> to_u16)) |
+      ((val.u16() & (0x3F |> to_u16)) << 8)
     self.w = 1 |> to_u8
   } else {
     // t: ........ HGFEDCBA = d: HGFEDCBA
     // v                    = t
     // w:                   = 0
     //ppu.t = (ppu.t & 0xFF00) | uint16(value)
-    self.t = self.t.land(0xFF00 |> to_u16).lor(val.u16())
+    self.t = (self.t & (0xFF00 |> to_u16)) | val.u16()
     self.v = self.t
     self.w = 0 |> to_u8
   }
@@ -455,7 +451,7 @@ fn writeData(self : PPU, val : UInt8) -> Unit {
 fn writeDMA(self : PPU, val : UInt8) -> Unit {
   let nes = self.nes.unwrap()
   let cpu = nes.cpu
-  for i = 0, adr = val.u16().lsl(8)
+  for i = 0, adr = val.u16() << 8
       i <= 255
       i = i + 1, adr = adr + (1 |> to_u16) {
     self.oamData[self.oamAddress._] = cpu.mem[adr]
@@ -472,11 +468,11 @@ fn writeDMA(self : PPU, val : UInt8) -> Unit {
 fn incrementX(self : PPU) -> Unit {
   // increment hori(v)
   // if coarse X == 31
-  if self.v.land(0x001F |> to_u16) == (31 |> to_u16) {
+  if (self.v & (0x001F |> to_u16)) == (31 |> to_u16) {
     // coarse X = 0
-    self.v = self.v.land(0xFFE0 |> to_u16)
+    self.v = self.v & (0xFFE0 |> to_u16)
     // switch horizontal nametable
-    self.v = self.v.lxor(0x0400 |> to_u16)
+    self.v = self.v ^ (0x0400 |> to_u16)
   } else {
     // increment coarse X
     self.v = self.v + (1 |> to_u16)
@@ -486,19 +482,19 @@ fn incrementX(self : PPU) -> Unit {
 fn incrementY(self : PPU) -> Unit {
   // increment vert(v)
   // if fine Y < 7
-  if self.v.land(0x7000 |> to_u16) != (0x7000 |> to_u16) {
+  if (self.v & (0x7000 |> to_u16)) != (0x7000 |> to_u16) {
     // increment fine Y
     self.v = self.v + (0x1000 |> to_u16)
   } else {
     // fine Y = 0
-    self.v = self.v.land(0x8FFF |> to_u16)
+    self.v = self.v & (0x8FFF |> to_u16)
     // let y = coarse Y
-    let mut y = self.v.land(0x03E0 |> to_u16).lsr(5)
+    let mut y = (self.v & (0x03E0 |> to_u16)) >> 5
     if y == (29 |> to_u16) {
       // coarse Y = 0
       y = 0 |> to_u16
       // switch vertical nametable
-      self.v = self.v.lxor(0x0800 |> to_u16)
+      self.v = self.v ^ (0x0800 |> to_u16)
     } else if y == (31 |> to_u16) {
       // coarse Y = 0, nametable not switched
       y = 0 |> to_u16
@@ -508,20 +504,20 @@ fn incrementY(self : PPU) -> Unit {
     }
     // put coarse Y back into v
     //ppu.v = (ppu.v & 0xFC1F) | (y << 5)
-    self.v = self.v.land(0xFC1F |> to_u16).lor(y.lsl(5))
+    self.v = (self.v & (0xFC1F |> to_u16)) | (y << 5)
   }
 }
 
 fn copyX(self : PPU) -> Unit {
   // hori(v) = hori(t)
   // v: .....F.. ...EDCBA = t: .....F.. ...EDCBA
-  self.v = self.v.land(0xFBE0 |> to_u16).lor(self.t.land(0x041F |> to_u16))
+  self.v = (self.v & (0xFBE0 |> to_u16)) | (self.t & (0x041F |> to_u16))
 }
 
 fn copyY(self : PPU) -> Unit {
   // vert(v) = vert(t)
   // v: .IHGF.ED CBA..... = t: .IHGF.ED CBA.....
-  self.v = self.v.land(0x841F |> to_u16).lor(self.t.land(0x7BE0 |> to_u16))
+  self.v = (self.v & (0x841F |> to_u16)) | (self.t & (0x7BE0 |> to_u16))
 }
 
 fn nmiChange(self : PPU) -> Unit {
@@ -546,9 +542,11 @@ fn setVerticalBlank(self : PPU) -> Unit {
       let color = self.back.pixels[row][col]._
       nes_write_color(
         row * resolution.0 + col,
-        red=color.land(0xFF0000).lsr(16),
-        green=color.land(0xFF00).lsr(8),
-        blue=color.land(0xFF),
+        red=color.land(0xFF0000).reinterpret_as_uint() >> 16
+          |> UInt::reinterpret_as_int,
+        green=color.land(0xFF00).reinterpret_as_uint() >> 8
+          |> UInt::reinterpret_as_int,
+        blue=color & 0xFF,
       )
     }
   }
@@ -563,7 +561,7 @@ fn clearVerticalBlank(self : PPU) -> Unit {
 
 fn fetchNameTableByte(self : PPU) -> Unit {
   let v = self.v
-  let adr = (0x2000 |> to_u16).lor(v.land(0x0FFF |> to_u16))
+  let adr = (0x2000 |> to_u16) | (v & (0x0FFF |> to_u16))
   self.nameTable = self.mem[adr]
 }
 
@@ -571,14 +569,15 @@ fn fetchAttributeTableByte(self : PPU) -> Unit {
   let v = self.v
   // CHECKME
   // address := 0x23C0 | (v & 0x0C00) | ((v >> 4) & 0x38) | ((v >> 2) & 0x07)
-  let adr = (0x23C0 |> to_u16).lor(v.land(0x0C00 |> to_u16)).lor(
-    v.lsr(4).land(0x38 |> to_u16),
-  ).lor(v.lsr(2).land(0x07 |> to_u16))
+  let adr = (0x23C0 |> to_u16) |
+    (v & (0x0C00 |> to_u16)) |
+    ((v >> 4) & (0x38 |> to_u16)) |
+    ((v >> 2) & (0x07 |> to_u16))
   // CHECKME
   // shift := ((v >> 4) & 4) | (v & 2)
-  let shift = v.lsr(4).land(4 |> to_u16).lor(v.land(2 |> to_u16)).u8()
+  let shift = ((v >> 4) & (4 |> to_u16)) | (v & (2 |> to_u16)) |> to_u8
   // ppu.attributeTableByte = ((ppu.Read(address) >> shift) & 3) << 2
-  self.attributeTable = self.mem[adr].lsr(shift._).land(3 |> to_u8).lsl(2)
+  self.attributeTable = ((self.mem[adr] >> shift._) & (3 |> to_u8)) << 2
 }
 
 // fineY := (ppu.v >> 12) & 7
@@ -586,7 +585,7 @@ fn fetchAttributeTableByte(self : PPU) -> Unit {
 // tile := ppu.nameTableByte
 // address := 0x1000*uint16(table) + uint16(tile)*16 + fineY
 fn tileAdr(self : PPU) -> Int {
-  let fineY = self.v.lsr(12).land(7 |> to_u16)
+  let fineY = (self.v >> 12) & (7 |> to_u16)
   let table = self.flagBackgroundTable
   let tile = self.nameTable
   0x1000 * (table |> to_u8)._ + tile._ * 16 + fineY._
@@ -604,28 +603,28 @@ fn fetchHighTileByte(self : PPU) -> Unit {
 fn storeTileData(self : PPU) -> Unit {
   let data = for i = 0, data = 0L; i < 8; {
     let a = self.attributeTable
-    let p1 = self.lowTile.land(0x80 |> to_u8).lsr(7)
-    let p2 = self.highTile.land(0x80 |> to_u8).lsr(6)
-    self.lowTile = self.lowTile.lsl(1)
-    self.highTile = self.highTile.lsl(1)
+    let p1 = (self.lowTile & (0x80 |> to_u8)) >> 7
+    let p2 = (self.highTile & (0x80 |> to_u8)) >> 6
+    self.lowTile = self.lowTile << 1
+    self.highTile = self.highTile << 1
     continue i + 1,
-      data.lsl(4).lor(a._.to_int64()).lor(p1._.to_int64()).lor(p2._.to_int64())
+      (data << 4) | a._.to_int64() | p1._.to_int64() | p2._.to_int64()
   } else { // data |= uint32(a | p1 | p2)
     data
   }
-  self.tileData = self.tileData.lor(data)
+  self.tileData = self.tileData | data
 }
 
 fn fetchTileData(self : PPU) -> UInt32 {
-  self.tileData.lsr(32).to_int() |> to_u32
+  self.tileData >> 32 |> Int64::to_int |> to_u32
 }
 
 fn backgroundPixel(self : PPU) -> UInt8 {
   if not(self.flagShowBackground) {
     return 0 |> to_u8
   }
-  let data = self.fetchTileData().lsr((7 - self.x._) * 4)
-  data._.land(0x0F) |> to_u8
+  let data = self.fetchTileData() >> ((7 - self.x._) * 4)
+  data._ & 0x0F |> to_u8
 }
 
 fn spritePixel(self : PPU) -> (UInt8, UInt8) {
@@ -643,7 +642,8 @@ fn spritePixel(self : PPU) -> (UInt8, UInt8) {
     }
     offset = 7 - offset
     // CHECKME
-    let color = self.spritePatterns[i].lsr(offset * 4).land(0x0F |> to_u32).u8()
+    let color = (self.spritePatterns[i] >> (offset * 4)) & (0x0F |> to_u32)
+      |> to_u8()
     if color._ % 4 == 0 {
       continue i + 1
     }
@@ -672,7 +672,7 @@ fn renderPixel(self : PPU) -> Unit {
   if not(b) && not(s) {
     color = 0 |> to_u8
   } else if not(b) && s {
-    color = sprite.lor(0x10 |> to_u8)
+    color = sprite | (0x10 |> to_u8)
   } else if b && not(s) {
     color = background
   } else {
@@ -680,7 +680,7 @@ fn renderPixel(self : PPU) -> Unit {
       self.flagSpriteZeroHit = true
     }
     if self.spritePriorities[i._] == (0 |> to_u8) {
-      color = sprite.lor(0x10 |> to_u8)
+      color = sprite | (0x10 |> to_u8)
     } else {
       color = background
     }
@@ -696,16 +696,16 @@ fn fetchSpritePattern(self : PPU, i : Int, row : Int) -> UInt32 {
   let mut adr = 0 |> to_u16
   let mut table = 0 |> to_u8
   if not(self.flagSpriteSize) {
-    if attributes.land(0x80 |> to_u8) == (0x80 |> to_u8) {
+    if (attributes & (0x80 |> to_u8)) == (0x80 |> to_u8) {
       row = 7 - row
     }
     table = self.flagSpriteTable |> to_u8
   } else {
-    if attributes.land(0x80 |> to_u8) == (0x80 |> to_u8) {
+    if (attributes & (0x80 |> to_u8)) == (0x80 |> to_u8) {
       row = 15 - row
     }
-    table = tile.land(1 |> to_u8)
-    tile = tile.land(0xFE |> to_u8)
+    table = tile & (1 |> to_u8)
+    tile = tile & (0xFE |> to_u8)
     if row > 7 {
       tile = tile + (1 |> to_u8)
       row = row - 8
@@ -713,29 +713,30 @@ fn fetchSpritePattern(self : PPU, i : Int, row : Int) -> UInt32 {
   }
 
   // CHECK the coercion points
-  adr = (table._ * 0x1000 |> to_u16) + (tile._ * 16 |> to_u16) + (row
-    |> to_u16())
-  let a = attributes.land(3 |> to_u8).lsl(2)
+  adr = (table._ * 0x1000 |> to_u16) +
+    (tile._ * 16 |> to_u16) +
+    (row |> to_u16())
+  let a = (attributes & (3 |> to_u8)) << 2
   let mut lowTileByte = self.mem[adr]
   let mut highTileByte = self.mem[adr + (8 |> to_u16)]
   for i = 0, data = (0L |> to_u64()); i < 8; {
     //for i in 0..7:
     let mut p1 = 0 |> to_u8
     let mut p2 = 0 |> to_u8
-    if attributes.land(0x40 |> to_u8) == (0x40 |> to_u8) {
-      p1 = lowTileByte.land(1 |> to_u8)
-      p2 = highTileByte.land(1 |> to_u8).lsl(1)
-      lowTileByte = lowTileByte.lsr(1)
-      highTileByte = highTileByte.lsr(1)
+    if (attributes & (0x40 |> to_u8)) == (0x40 |> to_u8) {
+      p1 = lowTileByte & (1 |> to_u8)
+      p2 = (highTileByte & (1 |> to_u8)) << 1
+      lowTileByte = lowTileByte >> 1
+      highTileByte = highTileByte >> 1
     } else {
-      p1 = lowTileByte.land(0x80 |> to_u8).lsr(7)
-      p2 = highTileByte.land(0x80 |> to_u8).lsr(6)
-      lowTileByte = lowTileByte.lsl(1)
-      highTileByte = highTileByte.lsl(1)
+      p1 = (lowTileByte & (0x80 |> to_u8)) >> 7
+      p2 = (highTileByte & (0x80 |> to_u8)) >> 6
+      lowTileByte = lowTileByte << 1
+      highTileByte = highTileByte << 1
     }
-    continue i + 1, data.lsl(4).lor(a.u64()).lor(p1.u64()).lor(p2.u64())
+    continue i + 1, (data >> 4) | a.u64() | p1.u64() | p2.u64()
   } else {
-    data.u32()
+    data |> to_u32()
   }
 }
 
@@ -752,7 +753,7 @@ fn evaluateSprites(self : PPU) -> Unit {
     if count < 8 {
       self.spritePatterns[count] = self.fetchSpritePattern(i, row)
       self.spritePositions[count] = x
-      self.spritePriorities[count] = a.lsr(5).land(1 |> to_u8)
+      self.spritePriorities[count] = (a >> 5) & (1 |> to_u8)
       self.spriteIndices[count] = i |> to_u8
     }
   } else {
@@ -783,7 +784,7 @@ fn tick(self : PPU, trace_log : Bool) -> Unit {
       self.cycle = 0
       self.scanLine = 0
       self.frame = self.frame + 1L
-      self.f = self.f.lxor(1 |> to_u8)
+      self.f = self.f ^ (1 |> to_u8)
       return
     }
   }
@@ -794,7 +795,7 @@ fn tick(self : PPU, trace_log : Bool) -> Unit {
     if self.scanLine > 261 {
       self.scanLine = 0
       self.frame = self.frame + 1L
-      self.f = self.f.lxor(1 |> to_u8)
+      self.f = self.f ^ (1 |> to_u8)
     }
   }
 }
@@ -816,7 +817,7 @@ fn step(self : PPU, trace_log : Bool) -> Unit {
       self.renderPixel()
     }
     if renderLine && fetchCycle {
-      self.tileData = self.tileData.lsl(4)
+      self.tileData = self.tileData << 4
       match self.cycle % 8 {
         0 => self.storeTileData()
         1 => self.fetchNameTableByte()

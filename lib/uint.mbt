@@ -9,8 +9,6 @@ type UInt16 Int derive(Eq, Compare, Default)
 
 type UInt32 Int
 
-type UInt64 Int64
-
 trait U8 {
   u8(Self) -> UInt8
 }
@@ -43,13 +41,13 @@ fn to_u64[T : U64](t : T) -> UInt64 {
   t.u64()
 }
 
-impl U8 for Int with u8(i : Int) -> UInt8 { UInt8(i.land(0xFF)) }
+impl U8 for Int with u8(i : Int) -> UInt8 { UInt8(i & 0xFF) }
 
-impl U16 for Int with u16(i : Int) -> UInt16 { UInt16(i.land(0xFFFF)) }
+impl U16 for Int with u16(i : Int) -> UInt16 { UInt16(i & 0xFFFF) }
 
 impl U32 for Int with u32(i : Int) -> UInt32 { UInt32(i) }
 
-impl U64 for Int64 with u64(i : Int64) -> UInt64 { UInt64(i) }
+impl U64 for Int64 with u64(i : Int64) -> UInt64 { i.reinterpret_as_uint64() }
 
 fn to_string(self : UInt8) -> String {
   self._.to_string()
@@ -105,8 +103,8 @@ fn u16(self : UInt8) -> UInt16 {
   self._ |> to_u16
 }
 
-fn u32(self : UInt64) -> UInt32 {
-  self._.to_int() |> to_u32
+impl U32 for UInt64 with u32(self : UInt64) -> UInt32 {
+  self.to_int() |> to_u32
 }
 
 fn u64(self : UInt32) -> UInt64 {
@@ -118,68 +116,56 @@ fn u64(self : UInt8) -> UInt64 {
 }
 
 // `bit` is usually a constant, so `Int` is easier to use
-fn lsl(self : UInt8, bit : Int) -> UInt8 {
-  self._.lsl(bit) |> to_u8
+fn op_shl(self : UInt8, bit : Int) -> UInt8 {
+  self._ << bit |> to_u8
 }
 
-fn lsl(self : UInt16, bit : Int) -> UInt16 {
-  self._.lsl(bit) |> to_u16
+fn op_shl(self : UInt16, bit : Int) -> UInt16 {
+  self._ << bit |> to_u16
 }
 
-fn lsl(self : UInt64, bit : Int) -> UInt64 {
-  self._.lsl(bit) |> to_u64
+fn op_shr(self : UInt8, bit : Int) -> UInt8 {
+  self._.reinterpret_as_uint() >> bit |> UInt::reinterpret_as_int |> to_u8
 }
 
-fn lsr(self : UInt8, bit : Int) -> UInt8 {
-  self._.lsr(bit) |> to_u8
+fn op_shr(self : UInt16, bit : Int) -> UInt16 {
+  self._.reinterpret_as_uint() >> bit |> UInt::reinterpret_as_int |> to_u16
 }
 
-fn lsr(self : UInt16, bit : Int) -> UInt16 {
-  self._.lsr(bit) |> to_u16
-}
-
-fn lsr(self : UInt32, bit : Int) -> UInt32 {
-  self._.lsr(bit) |> to_u32
-}
-
-fn lsr(self : UInt64, bit : Int) -> UInt64 {
-  self._.lsr(bit) |> to_u64
+fn op_shr(self : UInt32, bit : Int) -> UInt32 {
+  self._ >> bit |> to_u32
 }
 
 fn lor(self : UInt8, bit : UInt8) -> UInt8 {
-  self._.lor(bit._) |> to_u8
+  self._ | bit._ |> to_u8
 }
 
 fn lor(self : UInt16, bit : UInt16) -> UInt16 {
-  self._.lor(bit._) |> to_u16
-}
-
-fn lor(self : UInt64, bit : UInt64) -> UInt64 {
-  self._.lor(bit._) |> to_u64
+  self._ | bit._ |> to_u16
 }
 
 fn land(self : UInt8, rhs : UInt8) -> UInt8 {
-  self._.land(rhs._) |> to_u8
+  self._ & rhs._ |> to_u8
 }
 
 fn land(self : UInt16, rhs : UInt16) -> UInt16 {
-  self._.land(rhs._) |> to_u16
+  self._ & rhs._ |> to_u16
 }
 
 fn land(self : UInt32, rhs : UInt32) -> UInt32 {
-  self._.land(rhs._) |> to_u32
+  self._ & rhs._ |> to_u32
 }
 
 fn lxor(self : UInt8, rhs : UInt8) -> UInt8 {
-  self._.lxor(rhs._) |> to_u8
+  self._ ^ rhs._ |> to_u8
 }
 
 fn lxor(self : UInt16, rhs : UInt16) -> UInt16 {
-  self._.lxor(rhs._) |> to_u16
+  self._ ^ rhs._ |> to_u16
 }
 
 fn bit(self : UInt8, bit : Int) -> Bool {
-  self.lsr(bit).land(1 |> to_u8)._ == 1
+  ((self >> bit) & (1 |> to_u8))._ == 1
 }
 
 fn to_hex_digit(i : Int) -> String {
@@ -188,11 +174,11 @@ fn to_hex_digit(i : Int) -> String {
 }
 
 fn to_hex(self : UInt8) -> String {
-  (self._.lsr(4) |> to_hex_digit) + (self._.land(0xf) |> to_hex_digit())
+  (self._ >> 4 |> to_hex_digit) + (self._ & 0xf |> to_hex_digit())
 }
 
 fn to_hex(self : UInt16) -> String {
-  (self._.lsr(8) |> to_u8).to_hex() + (self._.land(0xff) |> to_u8).to_hex()
+  (self._ >> 8 |> to_u8).to_hex() + (self._ & 0xff |> to_u8).to_hex()
 }
 
 fn to_byte(
@@ -205,11 +191,14 @@ fn to_byte(
   b6 : Bool,
   b7 : Bool
 ) -> UInt8 {
-  (b0 |> to_u8).lor((b1 |> to_u8).lsl(1)).lor((b2 |> to_u8).lsl(2)).lor(
-    (b3 |> to_u8).lsl(3),
-  ).lor((b4 |> to_u8).lsl(4)).lor((b5 |> to_u8).lsl(5)).lor(
-    (b6 |> to_u8).lsl(6),
-  ).lor((b7 |> to_u8).lsl(7))
+  (b0 |> to_u8) |
+  ((b1 |> to_u8) << 1) |
+  ((b2 |> to_u8) << 2) |
+  ((b3 |> to_u8) << 3) |
+  ((b4 |> to_u8) << 4) |
+  ((b5 |> to_u8) << 5) |
+  ((b6 |> to_u8) << 6) |
+  ((b7 |> to_u8) << 7)
 }
 
 fn readUInt8(self : MemoryReader) -> UInt8 {
