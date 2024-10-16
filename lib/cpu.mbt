@@ -158,39 +158,38 @@ fn op_set(self : CPUMemory, adr : UInt16, val : UInt8) -> Unit {
 fn read16(self : CPUMemory, adr : UInt16) -> UInt16 {
   let lo = self[adr] |> to_u16
   let hi = self[adr + (1 |> to_u16)] |> to_u16
-  hi.lsl(8).lor(lo)
+  (hi << 8) | lo
 }
 
 fn read16bug(self : CPUMemory, adr : UInt16) -> UInt16 {
   // Low byte wraps without incrementing high byte
   let a = adr
-  let b = a
-    .land(0xFF00 |> to_u16)
-    .lor((adr |> to_u8()) + (1 |> to_u8()) |> to_u16)
+  let b = (a & (0xFF00 |> to_u16)) |
+    ((adr |> to_u8()) + (1 |> to_u8()) |> to_u16)
   let lo = self[a]
   let hi = self[b]
-  (hi |> to_u16).lsl(8).lor(lo |> to_u16)
+  ((hi |> to_u16) << 8) | (lo |> to_u16)
 }
 
 fn push(self : CPU, val : UInt8) -> Unit {
-  self.mem[(self.sp |> to_u16).lor(0x100 |> to_u16)] = val
+  self.mem[(self.sp |> to_u16) | (0x100 |> to_u16)] = val
   self.sp = self.sp - (1 |> to_u8())
 }
 
 fn pull(self : CPU) -> UInt8 {
   self.sp = self.sp + (1 |> to_u8())
-  self.mem[(self.sp |> to_u16).lor(0x100 |> to_u16)]
+  self.mem[(self.sp |> to_u16) | (0x100 |> to_u16)]
 }
 
 fn push16(self : CPU, val : UInt16) -> Unit {
-  self.push(val.lsr(8) |> to_u8())
+  self.push(val >> 8 |> to_u8())
   self.push(val |> to_u8())
 }
 
 fn pull16(self : CPU) -> UInt16 {
   let v1 = self.pull() |> to_u16
-  let v2 = (self.pull() |> to_u16).lsl(8)
-  v1.lor(v2)
+  let v2 = (self.pull() |> to_u16) << 8
+  v1 | v2
 }
 
 fn setZ(self : CPU, val : UInt8) -> Unit {
@@ -198,7 +197,7 @@ fn setZ(self : CPU, val : UInt8) -> Unit {
 }
 
 fn setN(self : CPU, val : UInt8) -> Unit {
-  self.n = val.land(0x80 |> to_u8()) != (0 |> to_u8())
+  self.n = (val & (0x80 |> to_u8())) != (0 |> to_u8())
 }
 
 fn setZN(self : CPU, val : UInt8) -> Unit {
@@ -447,7 +446,7 @@ fn initCPU() -> CPU {
 
 // pagesDiffer returns true if the two addresses reference different pages
 fn pagesDiffer(a : UInt16, b : UInt16) -> Bool {
-  a.land(0xFF00 |> to_u16) != b.land(0xFF00 |> to_u16)
+  (a & (0xFF00 |> to_u16)) != (b & (0xFF00 |> to_u16))
 }
 
 // branch, then adds a cycle for taking a branch and adds another cycle
@@ -476,14 +475,14 @@ fn opADC(self : CPU, info : StepInfo) -> Unit {
   self.setZN(self.a)
   self.c = a._ + b._ + c._ > 0xFF
   // (a^b)&0x80 == 0 && (a^self.a)&0x80 != 0
-  self.v = a.lxor(b).land(0x80 |> to_u8()) == (0 |> to_u8()) &&
-    a.lxor(self.a).land(0x80 |> to_u8()) != (0 |> to_u8())
+  self.v = ((a ^ b) & (0x80 |> to_u8())) == (0 |> to_u8()) &&
+    ((a ^ self.a) & (0x80 |> to_u8())) != (0 |> to_u8())
 }
 
 // AND - Logical and
 // ** opcode name changed
 fn opAND(self : CPU, info : StepInfo) -> Unit {
-  self.a = self.a.land(self.mem[info.address]) // self.a & self.mem[info.address]
+  self.a = self.a & self.mem[info.address] // self.a & self.mem[info.address]
   self.setZN(self.a)
 }
 
@@ -491,14 +490,14 @@ fn opAND(self : CPU, info : StepInfo) -> Unit {
 fn opASL(self : CPU, info : StepInfo) -> Unit {
   match info.mode {
     Accumulator => {
-      self.c = self.a.lsr(7).land(1 |> to_u8()) != (0 |> to_u8()) // (self.a >> 7) & 1
-      self.a = self.a.lsl(1)
+      self.c = ((self.a >> 7) & (1 |> to_u8())) != (0 |> to_u8()) // (self.a >> 7) & 1
+      self.a = self.a << 1
       self.setZN(self.a)
     }
     _ => {
       let mut val = self.mem[info.address]
-      self.c = val.lsr(7).land(1 |> to_u8()) != (0 |> to_u8()) // (val >> 7) & 1
-      val = val.lsl(1)
+      self.c = ((val >> 7) & (1 |> to_u8())) != (0 |> to_u8()) // (val >> 7) & 1
+      val = val << 1
       self.mem[info.address] = val
       self.setZN(val)
     }
@@ -529,8 +528,8 @@ fn opBEQ(self : CPU, info : StepInfo) -> Unit {
 // BIT - Bit test
 fn opBIT(self : CPU, info : StepInfo) -> Unit {
   let val = self.mem[info.address] // :- same as go!
-  self.v = val.lsr(6).land(1 |> to_u8()) != (0 |> to_u8()) // (val >> 6) & 1
-  self.setZ(val.land(self.a)) // val & self.A
+  self.v = ((val >> 6) & (1 |> to_u8())) != (0 |> to_u8()) // (val >> 6) & 1
+  self.setZ(val & self.a) // val & self.A
   self.setN(val)
 }
 
@@ -634,7 +633,7 @@ fn opDEY(self : CPU, _info : StepInfo) -> Unit {
 
 // EOR - Exclusive or
 fn opEOR(self : CPU, info : StepInfo) -> Unit {
-  self.a = self.a.lxor(self.mem[info.address])
+  self.a = self.a ^ self.mem[info.address]
   self.setZN(self.a)
 }
 
@@ -693,14 +692,14 @@ fn opLDY(self : CPU, info : StepInfo) -> Unit {
 fn opLSR(self : CPU, info : StepInfo) -> Unit {
   match info.mode {
     Accumulator => {
-      self.c = self.a.land(1 |> to_u8()) != (0 |> to_u8()) // self.A & 1
-      self.a = self.a.lsr(1) // self.A >>= 1
+      self.c = (self.a & (1 |> to_u8())) != (0 |> to_u8()) // self.A & 1
+      self.a = self.a >> 1 // self.A >>= 1
       self.setZN(self.a)
     }
     _ => {
       let mut val = self.mem[info.address]
-      self.c = val.land(1 |> to_u8()) != (0 |> to_u8()) // value & 1
-      val = val.lsr(1) // val >>= 1
+      self.c = (val & (1 |> to_u8())) != (0 |> to_u8()) // value & 1
+      val = val >> 1 // val >>= 1
       self.mem[info.address] = val
       self.setZN(val)
     }
@@ -714,7 +713,7 @@ fn opNOP(self : CPU, info : StepInfo) -> Unit {
 
 // ORA - Logical inclusive or
 fn opORA(self : CPU, info : StepInfo) -> Unit {
-  self.a = self.a.lor(self.mem[info.address])
+  self.a = self.a | self.mem[info.address]
   self.setZN(self.a)
 }
 
@@ -725,7 +724,7 @@ fn opPHA(self : CPU, _info : StepInfo) -> Unit {
 
 // PHP - Push processor status
 fn opPHP(self : CPU, _info : StepInfo) -> Unit {
-  self.push(self.flags().lor(0x10 |> to_u8()))
+  self.push(self.flags() | (0x10 |> to_u8()))
 }
 
 // PLA - Pull accumulator
@@ -736,7 +735,7 @@ fn opPLA(self : CPU, _info : StepInfo) -> Unit {
 
 // PLP - Pull processor status
 fn opPLP(self : CPU, _info : StepInfo) -> Unit {
-  self.set_flags(self.pull().land(0xEF |> to_u8()).lor(0x20 |> to_u8())) // pull() & 0xEF | 0x20
+  self.set_flags((self.pull() & (0xEF |> to_u8())) | (0x20 |> to_u8())) // pull() & 0xEF | 0x20
 }
 
 // ROL - Rotate left
@@ -744,14 +743,14 @@ fn opROL(self : CPU, info : StepInfo) -> Unit {
   let c = self.c |> to_u8()
   match info.mode {
     Accumulator => {
-      self.c = self.a.lsr(7).land(1 |> to_u8()) != (0 |> to_u8()) // (self.A >> 7) & 1
-      self.a = self.a.lsl(1).lor(c) // (self.A << 1) | c
+      self.c = ((self.a >> 7) & (1 |> to_u8())) != (0 |> to_u8()) // (self.A >> 7) & 1
+      self.a = (self.a << 1) | c // (self.A << 1) | c
       self.setZN(self.a)
     }
     _ => {
       let mut val = self.mem[info.address]
-      self.c = val.lsr(7).land(1 |> to_u8()) != (0 |> to_u8()) // (val >> 7) & 1
-      val = val.lsl(1).lor(c) // (val << 1) | c
+      self.c = ((val >> 7) & (1 |> to_u8())) != (0 |> to_u8()) // (val >> 7) & 1
+      val = (val << 1) | c // (val << 1) | c
       self.mem[info.address] = val
       self.setZN(val)
     }
@@ -763,14 +762,14 @@ fn opROR(self : CPU, info : StepInfo) -> Unit {
   let c = self.c |> to_u8()
   match info.mode {
     Accumulator => {
-      self.c = self.a.land(1 |> to_u8()) != (0 |> to_u8()) // self.A & 1
-      self.a = self.a.lsr(1).lor(c.lsl(7)) // (self.A >> 1) | (c << 7)
+      self.c = (self.a & (1 |> to_u8())) != (0 |> to_u8()) // self.A & 1
+      self.a = (self.a >> 1) | (c << 7) // (self.A >> 1) | (c << 7)
       self.setZN(self.a)
     }
     _ => {
       let mut val = self.mem[info.address]
-      self.c = val.land(1 |> to_u8()) != (0 |> to_u8()) // val & 1
-      val = val.lsr(1).lor(c.lsl(7)) // (val >> 1) | (c << 7)
+      self.c = (val & (1 |> to_u8())) != (0 |> to_u8()) // val & 1
+      val = (val >> 1) | (c << 7) // (val >> 1) | (c << 7)
       self.mem[info.address] = val
       self.setZN(val)
     }
@@ -779,7 +778,7 @@ fn opROR(self : CPU, info : StepInfo) -> Unit {
 
 // RTI - Return from interrupt
 fn opRTI(self : CPU, info : StepInfo) -> Unit {
-  self.set_flags(self.pull().land(0xEF |> to_u8()).lor(0x20 |> to_u8())) // pull() & 0xEF | 0x20
+  self.set_flags((self.pull() & (0xEF |> to_u8())) | (0x20 |> to_u8())) // pull() & 0xEF | 0x20
   self.pc = self.pull16()
 }
 
@@ -796,8 +795,8 @@ fn opSBC(self : CPU, info : StepInfo) -> Unit {
   self.a = a - b - ((1 |> to_u8()) - c)
   self.setZN(self.a)
   self.c = a._ - b._ - ((1 |> to_u8()) - c)._ >= 0
-  self.v = a.lxor(b).land(0x80 |> to_u8()) != (0 |> to_u8()) &&
-    a.lxor(self.a).land(0x80 |> to_u8()) != (0 |> to_u8())
+  self.v = ((a ^ b) & (0x80 |> to_u8())) != (0 |> to_u8()) &&
+    ((a ^ self.a) & (0x80 |> to_u8())) != (0 |> to_u8())
 }
 
 // SEC - Set carry flag
@@ -940,7 +939,7 @@ fn opRRA(self : CPU, info : StepInfo) -> Unit {
 
 fn opSAX(self : CPU, info : StepInfo) -> Unit {
   // Stores the bitwise AND of A and X. As with STA and STX, no flags are affected.
-  self.mem[info.address] = self.a.land(self.x)
+  self.mem[info.address] = self.a & self.x
 }
 
 fn opSHX(self : CPU, info : StepInfo) -> Unit {
