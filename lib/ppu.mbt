@@ -734,7 +734,7 @@ fn fetchSpritePattern(self : PPU, i : Int, row : Int) -> UInt32 {
       lowTileByte = lowTileByte << 1
       highTileByte = highTileByte << 1
     }
-    continue i + 1, (data >> 4) | a.u64() | p1.u64() | p2.u64()
+    continue i + 1, (data << 4) | a.u64() | p1.u64() | p2.u64()
   } else {
     data |> to_u32()
   }
