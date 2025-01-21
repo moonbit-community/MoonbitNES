@@ -13,7 +13,7 @@ fn Controller::new() -> Controller {
 }
 
 // nim and go has different logic?
-fn read(self : Controller) -> UInt8 {
+fn Controller::read(self : Controller) -> UInt8 {
   if self.index >= 8 {
     return 1 |> to_u8
   }
@@ -24,7 +24,7 @@ fn read(self : Controller) -> UInt8 {
   pressed |> to_u8
 }
 
-fn write(self : Controller, val : UInt8) -> Unit {
+fn Controller::write(self : Controller, val : UInt8) -> Unit {
   self.strobe = val
   if self.strobe.land(1 |> to_u8) == (1 |> to_u8) {
     self.index = 0

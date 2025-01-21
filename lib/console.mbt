@@ -35,7 +35,7 @@ fn NES::new(data : FixedArray[Int]) -> NES {
   nes
 }
 
-fn reset(self : NES) -> Unit {
+fn NES::reset(self : NES) -> Unit {
   self.cpu.reset()
   self.ppu.reset()
   let prefix = self.cpu.formatInstruction()
@@ -43,7 +43,7 @@ fn reset(self : NES) -> Unit {
   println("Initial instruction after reset: " + prefix + " " + suffix)
 }
 
-fn step(self : NES, trace_log : Bool) -> Int {
+fn NES::step(self : NES, trace_log : Bool) -> Int {
   let step_cnt = self.step_cnt
   //log_trace("step: \(step_cnt)")
   let cpuCycles = self.cpu.step(trace_log)
@@ -63,7 +63,7 @@ fn step(self : NES, trace_log : Bool) -> Int {
   cpuCycles
 }
 
-fn run_a_while(self : NES, seconds : Double) -> Unit {
+fn NES::run_a_while(self : NES, seconds : Double) -> Unit {
   loop (cpuFrequency * seconds).to_int() {
     cycles => if cycles > 0 { continue cycles - self.step(false) }
   }

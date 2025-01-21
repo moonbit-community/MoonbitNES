@@ -118,7 +118,7 @@ fn initPalette() -> FixedArray[Color] {
 
 let palette : FixedArray[Color] = initPalette()
 
-fn reset(self : PPU) -> Unit {
+fn PPU::reset(self : PPU) -> Unit {
   self.cycle = 340
   self.scanLine = 240
   //self.cycle = 25
@@ -213,11 +213,11 @@ fn paletteAdr(adr : UInt16) -> Int {
   }
 }
 
-fn readPalette(self : PPU, adr : UInt16) -> UInt8 {
+fn PPU::readPalette(self : PPU, adr : UInt16) -> UInt8 {
   self.paletteData[paletteAdr(adr)]
 }
 
-fn writePalette(self : PPU, adr : UInt16, val : UInt8) -> Unit {
+fn PPU::writePalette(self : PPU, adr : UInt16, val : UInt8) -> Unit {
   self.paletteData[paletteAdr(adr)] = val
 }
 
@@ -254,7 +254,7 @@ fn writePalette(self : PPU, adr : UInt16, val : UInt8) -> Unit {
 // $3000-3EFF is usually a mirror of the 2kB region from $2000-2EFF. The PPU does not render from this address range, so this space has negligible utility.
 // $3F00-3FFF is not configurable, always mapped to the internal palette control.
 
-fn op_get(self : PPUMemory, adr : UInt16) -> UInt8 {
+fn PPUMemory::op_get(self : PPUMemory, adr : UInt16) -> UInt8 {
   let adr = adr % (0x4000 |> to_u16)
   let nes = self.nes.unwrap()
   if adr._ >= 0x0000 && adr._ <= 0x1FFF {
@@ -270,7 +270,7 @@ fn op_get(self : PPUMemory, adr : UInt16) -> UInt8 {
   }
 }
 
-fn op_set(self : PPUMemory, adr : UInt16, val : UInt8) -> Unit {
+fn PPUMemory::op_set(self : PPUMemory, adr : UInt16, val : UInt8) -> Unit {
   let adr = adr % (0x4000 |> to_u16)
   let nes = self.nes.unwrap()
   if adr._ >= 0x0000 && adr._ <= 0x1FFF {
@@ -284,7 +284,7 @@ fn op_set(self : PPUMemory, adr : UInt16, val : UInt8) -> Unit {
   }
 }
 
-fn readRegister(self : PPU, adr : UInt16) -> UInt8 {
+fn PPU::readRegister(self : PPU, adr : UInt16) -> UInt8 {
   match adr._ {
     0x2002 => self.readStatus()
     0x2004 => self.readOAMData()
@@ -293,7 +293,7 @@ fn readRegister(self : PPU, adr : UInt16) -> UInt8 {
   }
 }
 
-fn writeRegister(self : PPU, adr : UInt16, val : UInt8) -> Unit {
+fn PPU::writeRegister(self : PPU, adr : UInt16, val : UInt8) -> Unit {
   self.register = val
   match adr._ {
     0x2000 => self.writeControl(val)
@@ -309,7 +309,7 @@ fn writeRegister(self : PPU, adr : UInt16, val : UInt8) -> Unit {
 }
 
 // $2000: PPUCTRL
-fn writeControl(self : PPU, val : UInt8) -> Unit {
+fn PPU::writeControl(self : PPU, val : UInt8) -> Unit {
   self.flagNameTable = val & (3 |> to_u8)
   self.flagIncrement = val.bit(2)
   self.flagSpriteTable = val.bit(3)
@@ -325,7 +325,7 @@ fn writeControl(self : PPU, val : UInt8) -> Unit {
 }
 
 // $2001: PPUMASK
-fn writeMask(self : PPU, val : UInt8) -> Unit {
+fn PPU::writeMask(self : PPU, val : UInt8) -> Unit {
   self.flagGrayscale = val.bit(0)
   self.flagShowLeftBackground = val.bit(1)
   self.flagShowLeftSprites = val.bit(2)
@@ -337,7 +337,7 @@ fn writeMask(self : PPU, val : UInt8) -> Unit {
 }
 
 // $2002: PPUSTATUS
-fn readStatus(self : PPU) -> UInt8 {
+fn PPU::readStatus(self : PPU) -> UInt8 {
   // TODO: wait for bitwise operators
   let mut result = self.register & (0x1F |> to_u8)
   result = result | ((self.flagSpriteOverflow |> to_u8()) << 5)
@@ -352,12 +352,12 @@ fn readStatus(self : PPU) -> UInt8 {
 }
 
 // $2003: OAMADDR
-fn writeOAMAddress(self : PPU, val : UInt8) -> Unit {
+fn PPU::writeOAMAddress(self : PPU, val : UInt8) -> Unit {
   self.oamAddress = val
 }
 
 // $2004: OAMDATA (read)
-fn readOAMData(self : PPU) -> UInt8 {
+fn PPU::readOAMData(self : PPU) -> UInt8 {
   let mut data = self.oamData[self.oamAddress._]
   if (self.oamAddress & (0x03 |> to_u8)) == (0x02 |> to_u8) {
     data = data & (0xE3 |> to_u8)
@@ -366,13 +366,13 @@ fn readOAMData(self : PPU) -> UInt8 {
 }
 
 // $2004: OAMDATA (write)
-fn writeOAMData(self : PPU, val : UInt8) -> Unit {
+fn PPU::writeOAMData(self : PPU, val : UInt8) -> Unit {
   self.oamData[self.oamAddress._] = val
   self.oamAddress = self.oamAddress + (1 |> to_u8)
 }
 
 // $2005: PPUSCROLL
-fn writeScroll(self : PPU, val : UInt8) -> Unit {
+fn PPU::writeScroll(self : PPU, val : UInt8) -> Unit {
   if self.w == (0 |> to_u8) {
     // t: ........ ...HGFED = d: HGFED...
     // x:               CBA = d: .....CBA
@@ -396,7 +396,7 @@ fn writeScroll(self : PPU, val : UInt8) -> Unit {
 }
 
 // $2006: PPUADDR
-fn writeAddress(self : PPU, val : UInt8) -> Unit {
+fn PPU::writeAddress(self : PPU, val : UInt8) -> Unit {
   if self.w == (0 |> to_u8) {
     // t: ..FEDCBA ........ = d: ..FEDCBA
     // t: .X...... ........ = 0
@@ -417,7 +417,7 @@ fn writeAddress(self : PPU, val : UInt8) -> Unit {
 }
 
 // $2007: PPUDATA (read)
-fn readData(self : PPU) -> UInt8 {
+fn PPU::readData(self : PPU) -> UInt8 {
   let mut val = self.mem[self.v]
 
   // emulate buffered reads
@@ -438,7 +438,7 @@ fn readData(self : PPU) -> UInt8 {
 }
 
 // $2007: PPUDATA (write)
-fn writeData(self : PPU, val : UInt8) -> Unit {
+fn PPU::writeData(self : PPU, val : UInt8) -> Unit {
   self.mem[self.v] = val
   if not(self.flagIncrement) {
     self.v = self.v + (1 |> to_u16)
@@ -448,7 +448,7 @@ fn writeData(self : PPU, val : UInt8) -> Unit {
 }
 
 // $4014: OAMDMA
-fn writeDMA(self : PPU, val : UInt8) -> Unit {
+fn PPU::writeDMA(self : PPU, val : UInt8) -> Unit {
   let nes = self.nes.unwrap()
   let cpu = nes.cpu
   for i = 0, adr = val.u16() << 8
@@ -465,7 +465,7 @@ fn writeDMA(self : PPU, val : UInt8) -> Unit {
 
 // NTSC Timing Helper Functions
 
-fn incrementX(self : PPU) -> Unit {
+fn PPU::incrementX(self : PPU) -> Unit {
   // increment hori(v)
   // if coarse X == 31
   if (self.v & (0x001F |> to_u16)) == (31 |> to_u16) {
@@ -479,7 +479,7 @@ fn incrementX(self : PPU) -> Unit {
   }
 }
 
-fn incrementY(self : PPU) -> Unit {
+fn PPU::incrementY(self : PPU) -> Unit {
   // increment vert(v)
   // if fine Y < 7
   if (self.v & (0x7000 |> to_u16)) != (0x7000 |> to_u16) {
@@ -508,19 +508,19 @@ fn incrementY(self : PPU) -> Unit {
   }
 }
 
-fn copyX(self : PPU) -> Unit {
+fn PPU::copyX(self : PPU) -> Unit {
   // hori(v) = hori(t)
   // v: .....F.. ...EDCBA = t: .....F.. ...EDCBA
   self.v = (self.v & (0xFBE0 |> to_u16)) | (self.t & (0x041F |> to_u16))
 }
 
-fn copyY(self : PPU) -> Unit {
+fn PPU::copyY(self : PPU) -> Unit {
   // vert(v) = vert(t)
   // v: .IHGF.ED CBA..... = t: .IHGF.ED CBA.....
   self.v = (self.v & (0x841F |> to_u16)) | (self.t & (0x7BE0 |> to_u16))
 }
 
-fn nmiChange(self : PPU) -> Unit {
+fn PPU::nmiChange(self : PPU) -> Unit {
   let nmi = self.nmiOutput && self.nmiOccured
   if nmi && not(self.nmiPrevious) {
     // TODO: this fixes some games but the delay shouldn't have to be so
@@ -530,7 +530,7 @@ fn nmiChange(self : PPU) -> Unit {
   self.nmiPrevious = nmi
 }
 
-fn setVerticalBlank(self : PPU) -> Unit {
+fn PPU::setVerticalBlank(self : PPU) -> Unit {
   //swap ppu.front, ppu.back[]
   //tmp := self.front
   //self.front = self.back
@@ -554,18 +554,18 @@ fn setVerticalBlank(self : PPU) -> Unit {
   self.nmiChange()
 }
 
-fn clearVerticalBlank(self : PPU) -> Unit {
+fn PPU::clearVerticalBlank(self : PPU) -> Unit {
   self.nmiOccured = false
   self.nmiChange()
 }
 
-fn fetchNameTableByte(self : PPU) -> Unit {
+fn PPU::fetchNameTableByte(self : PPU) -> Unit {
   let v = self.v
   let adr = (0x2000 |> to_u16) | (v & (0x0FFF |> to_u16))
   self.nameTable = self.mem[adr]
 }
 
-fn fetchAttributeTableByte(self : PPU) -> Unit {
+fn PPU::fetchAttributeTableByte(self : PPU) -> Unit {
   let v = self.v
   // CHECKME
   // address := 0x23C0 | (v & 0x0C00) | ((v >> 4) & 0x38) | ((v >> 2) & 0x07)
@@ -584,23 +584,23 @@ fn fetchAttributeTableByte(self : PPU) -> Unit {
 // table := ppu.flagBackgroundTable
 // tile := ppu.nameTableByte
 // address := 0x1000*uint16(table) + uint16(tile)*16 + fineY
-fn tileAdr(self : PPU) -> Int {
+fn PPU::tileAdr(self : PPU) -> Int {
   let fineY = (self.v >> 12) & (7 |> to_u16)
   let table = self.flagBackgroundTable
   let tile = self.nameTable
   0x1000 * (table |> to_u8)._ + tile._ * 16 + fineY._
 }
 
-fn fetchLowTileByte(self : PPU) -> Unit {
+fn PPU::fetchLowTileByte(self : PPU) -> Unit {
   self.lowTile = self.mem[self.tileAdr() |> to_u16]
 }
 
-fn fetchHighTileByte(self : PPU) -> Unit {
+fn PPU::fetchHighTileByte(self : PPU) -> Unit {
   self.highTile = self.mem[self.tileAdr() + 8 |> to_u16]
 }
 
 // Attention to coersions!
-fn storeTileData(self : PPU) -> Unit {
+fn PPU::storeTileData(self : PPU) -> Unit {
   let data = for i = 0, data = 0L; i < 8; {
     let a = self.attributeTable
     let p1 = (self.lowTile & (0x80 |> to_u8)) >> 7
@@ -615,11 +615,11 @@ fn storeTileData(self : PPU) -> Unit {
   self.tileData = self.tileData | data
 }
 
-fn fetchTileData(self : PPU) -> UInt32 {
+fn PPU::fetchTileData(self : PPU) -> UInt32 {
   self.tileData >> 32 |> Int64::to_int |> to_u32
 }
 
-fn backgroundPixel(self : PPU) -> UInt8 {
+fn PPU::backgroundPixel(self : PPU) -> UInt8 {
   if not(self.flagShowBackground) {
     return 0 |> to_u8
   }
@@ -627,7 +627,7 @@ fn backgroundPixel(self : PPU) -> UInt8 {
   data._ & 0x0F |> to_u8
 }
 
-fn spritePixel(self : PPU) -> (UInt8, UInt8) {
+fn PPU::spritePixel(self : PPU) -> (UInt8, UInt8) {
   if not(self.flagShowSprites) {
     return (0 |> to_u8, 0 |> to_u8)
   }
@@ -652,7 +652,7 @@ fn spritePixel(self : PPU) -> (UInt8, UInt8) {
   return (0 |> to_u8, 0 |> to_u8)
 }
 
-fn renderPixel(self : PPU) -> Unit {
+fn PPU::renderPixel(self : PPU) -> Unit {
   let x = self.cycle - 1
   let y = self.scanLine
   let mut background = self.backgroundPixel()
@@ -689,7 +689,7 @@ fn renderPixel(self : PPU) -> Unit {
   self.back.pixels[y][x] = c
 }
 
-fn fetchSpritePattern(self : PPU, i : Int, row : Int) -> UInt32 {
+fn PPU::fetchSpritePattern(self : PPU, i : Int, row : Int) -> UInt32 {
   let mut row = row
   let mut tile = self.oamData[i * 4 + 1]
   let attributes = self.oamData[i * 4 + 2]
@@ -740,7 +740,7 @@ fn fetchSpritePattern(self : PPU, i : Int, row : Int) -> UInt32 {
   }
 }
 
-fn evaluateSprites(self : PPU) -> Unit {
+fn PPU::evaluateSprites(self : PPU) -> Unit {
   let h = if not(self.flagSpriteSize) { 8 } else { 16 }
   let count = for i = 0, count = 0; i < 64; i = i + 1, count = count + 1 {
     let y = self.oamData[i * 4 + 0]
@@ -768,7 +768,7 @@ fn evaluateSprites(self : PPU) -> Unit {
 }
 
 // tick updates Cycle, ScanLine and Frame counters
-fn tick(self : PPU, trace_log : Bool) -> Unit {
+fn PPU::tick(self : PPU, trace_log : Bool) -> Unit {
   let nes = self.nes.unwrap()
   if self.nmiDelay > (0 |> to_u8) {
     if trace_log {
@@ -801,7 +801,7 @@ fn tick(self : PPU, trace_log : Bool) -> Unit {
 }
 
 // Step executes a single PPU cycle
-fn step(self : PPU, trace_log : Bool) -> Unit {
+fn PPU::step(self : PPU, trace_log : Bool) -> Unit {
   self.tick(trace_log)
   let renderingEnabled = self.flagShowBackground || self.flagShowSprites
   let preLine = self.scanLine == 261

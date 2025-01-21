@@ -84,7 +84,7 @@ fn addressingMode(mode : Int) -> AddressingMode {
   }
 }
 
-fn to_int(self : AddressingMode) -> Int {
+fn AddressingMode::to_int(self : AddressingMode) -> Int {
   match self {
     Absolute => 0
     AbsoluteX => 1
@@ -109,7 +109,7 @@ struct StepInfo {
   mode : AddressingMode
 } derive(Default)
 
-fn op_get(self : CPUMemory, adr : UInt16) -> UInt8 {
+fn CPUMemory::op_get(self : CPUMemory, adr : UInt16) -> UInt8 {
   let n = self.nes.unwrap()
   if adr._ >= 0x0000 && adr._ <= 0x1FFF {
     n.ram[adr._ % 0x0800]
@@ -131,7 +131,7 @@ fn op_get(self : CPUMemory, adr : UInt16) -> UInt8 {
   }
 }
 
-fn op_set(self : CPUMemory, adr : UInt16, val : UInt8) -> Unit {
+fn CPUMemory::op_set(self : CPUMemory, adr : UInt16, val : UInt8) -> Unit {
   let n = self.nes.unwrap()
   if adr._ >= 0x0000 && adr._ <= 0x1FFF {
     // let addr = adr._
@@ -155,13 +155,13 @@ fn op_set(self : CPUMemory, adr : UInt16, val : UInt8) -> Unit {
   }
 }
 
-fn read16(self : CPUMemory, adr : UInt16) -> UInt16 {
+fn CPUMemory::read16(self : CPUMemory, adr : UInt16) -> UInt16 {
   let lo = self[adr] |> to_u16
   let hi = self[adr + (1 |> to_u16)] |> to_u16
   (hi << 8) | lo
 }
 
-fn read16bug(self : CPUMemory, adr : UInt16) -> UInt16 {
+fn CPUMemory::read16bug(self : CPUMemory, adr : UInt16) -> UInt16 {
   // Low byte wraps without incrementing high byte
   let a = adr
   let b = (a & (0xFF00 |> to_u16)) |
@@ -171,45 +171,45 @@ fn read16bug(self : CPUMemory, adr : UInt16) -> UInt16 {
   ((hi |> to_u16) << 8) | (lo |> to_u16)
 }
 
-fn push(self : CPU, val : UInt8) -> Unit {
+fn CPU::push(self : CPU, val : UInt8) -> Unit {
   self.mem[(self.sp |> to_u16) | (0x100 |> to_u16)] = val
   self.sp = self.sp - (1 |> to_u8())
 }
 
-fn pull(self : CPU) -> UInt8 {
+fn CPU::pull(self : CPU) -> UInt8 {
   self.sp = self.sp + (1 |> to_u8())
   self.mem[(self.sp |> to_u16) | (0x100 |> to_u16)]
 }
 
-fn push16(self : CPU, val : UInt16) -> Unit {
+fn CPU::push16(self : CPU, val : UInt16) -> Unit {
   self.push(val >> 8 |> to_u8())
   self.push(val |> to_u8())
 }
 
-fn pull16(self : CPU) -> UInt16 {
+fn CPU::pull16(self : CPU) -> UInt16 {
   let v1 = self.pull() |> to_u16
   let v2 = (self.pull() |> to_u16) << 8
   v1 | v2
 }
 
-fn setZ(self : CPU, val : UInt8) -> Unit {
+fn CPU::setZ(self : CPU, val : UInt8) -> Unit {
   self.z = val == (0 |> to_u8())
 }
 
-fn setN(self : CPU, val : UInt8) -> Unit {
+fn CPU::setN(self : CPU, val : UInt8) -> Unit {
   self.n = (val & (0x80 |> to_u8())) != (0 |> to_u8())
 }
 
-fn setZN(self : CPU, val : UInt8) -> Unit {
+fn CPU::setZN(self : CPU, val : UInt8) -> Unit {
   self.setZ(val)
   self.setN(val)
 }
 
-fn flags(self : CPU) -> UInt8 {
+fn CPU::flags(self : CPU) -> UInt8 {
   to_byte(self.c, self.z, self.i, self.d, self.b, self.u, self.v, self.n)
 }
 
-fn set_flags(self : CPU, flags : UInt8) -> Unit {
+fn CPU::set_flags(self : CPU, flags : UInt8) -> Unit {
   self.c = flags.bit(0)
   self.z = flags.bit(1)
   self.i = flags.bit(2)
@@ -220,18 +220,18 @@ fn set_flags(self : CPU, flags : UInt8) -> Unit {
   self.n = flags.bit(7)
 }
 
-fn triggerNMI(self : CPU) -> Unit {
+fn CPU::triggerNMI(self : CPU) -> Unit {
   self.interrupt = Interrupt::NMI
 }
 
-fn triggerIRQ(self : CPU) -> Unit {
+fn CPU::triggerIRQ(self : CPU) -> Unit {
   if not(self.i) {
     self.interrupt = Interrupt::IRQ
   }
 }
 
 // Reset resets the CPU to its initial powerup state
-fn reset(self : CPU) -> Unit {
+fn CPU::reset(self : CPU) -> Unit {
   self.cycles = 0L
   self.pc = self.mem.read16(0xFFFC |> to_u16)
   self.sp = 0xFD |> to_u8()
@@ -248,7 +248,7 @@ fn reset(self : CPU) -> Unit {
 // TODO:
 // (line 3348) DBB5  6C FF 02  JMP ($02FF) = 0300              A:60 X:07 Y:00 P:65 SP:F9 PPU: 84,201 CYC:9615
 // (line 8981) C68B  8D 15 40  STA $4015 = FF                  A:02 X:FF Y:15 P:25 SP:FB PPU:233,107 CYC:26520
-fn formatAssemblySuffix(self : CPU) -> String {
+fn CPU::formatAssemblySuffix(self : CPU) -> String {
   let opcode = self.mem[self.pc]
   let name = instructionNames[opcode._]
   let bytes = instructionSizes[opcode._]
@@ -341,7 +341,7 @@ fn formatAssemblySuffix(self : CPU) -> String {
   }
 }
 
-fn formatAssembly(self : CPU) -> String {
+fn CPU::formatAssembly(self : CPU) -> String {
   let opcode = self.mem[self.pc]
   let name = instructionNames[opcode._]
   loop name + " " + self.formatAssemblySuffix() {
@@ -354,7 +354,7 @@ fn isSpecialOpcode(op : Int) -> Bool {
 }
 
 // PrintInstruction prints the current CPU state (next instruction)
-fn formatInstruction(self : CPU) -> String {
+fn CPU::formatInstruction(self : CPU) -> String {
   let opcode = self.mem[self.pc]
   let bytes = instructionSizes[opcode._]
   let name = instructionNames[opcode._]
@@ -383,7 +383,7 @@ fn formatInstruction(self : CPU) -> String {
 // [Disassembly][EffectiveAddress] [MemoryValue,h][Align,38] A:[A,2h] X:[X,2h] Y:[Y,2h] S:[SP,2h] P:[P,h] V:[Scanline,3] H:[Cycle,3] Fr:[FrameCount] Cycle:[CycleCount] BC:[ByteCode]
 // eg.
 // AEB5   LDA $0300,X [$030E] = $00              A:00 X:0E Y:3F S:F6 P:04 V:-1  H:310 Fr:51 Cycle:1489016 BC:BD 00 03
-fn formatInstructionWithMesen2Extended(self : CPU) -> String {
+fn CPU::formatInstructionWithMesen2Extended(self : CPU) -> String {
   let opcode = self.mem[self.pc]
   let bytes = instructionSizes[opcode._]
   let name = instructionNames[opcode._]
@@ -407,7 +407,7 @@ fn formatInstructionWithMesen2Extended(self : CPU) -> String {
   "\{pc}  \{w0} \{w1} \{w2} \{uf}\{asm}A:\{a} X:\{x} Y:\{y} P:\{p} SP:\{sp}"
 }
 
-fn formatMemoryDump(self : CPU, base : UInt16, cnt : Int) -> String {
+fn CPU::formatMemoryDump(self : CPU, base : UInt16, cnt : Int) -> String {
   for i = 0, ret = ""
       i < cnt
       i = i + 1, ret = ret + self.mem[base + (i |> to_u16)].to_hex() + " " {
@@ -451,7 +451,7 @@ fn pagesDiffer(a : UInt16, b : UInt16) -> Bool {
 
 // branch, then adds a cycle for taking a branch and adds another cycle
 // if the branch jumps to a new page
-fn branch(self : CPU, info : StepInfo) -> Unit {
+fn CPU::branch(self : CPU, info : StepInfo) -> Unit {
   self.pc = info.address
   self.cycles += 1L
   if pagesDiffer(info.pc, info.address) {
@@ -459,7 +459,7 @@ fn branch(self : CPU, info : StepInfo) -> Unit {
   }
 }
 
-fn compare(self : CPU, a : UInt8, b : UInt8) -> Unit {
+fn CPU::compare(self : CPU, a : UInt8, b : UInt8) -> Unit {
   self.setZN(a - b)
   self.c = a >= b
 }
@@ -467,7 +467,7 @@ fn compare(self : CPU, a : UInt8, b : UInt8) -> Unit {
 // opcodes
 
 // ADC - Add with carry
-fn opADC(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opADC(self : CPU, info : StepInfo) -> Unit {
   let a = self.a
   let b = self.mem[info.address]
   let c = self.c |> to_u8()
@@ -481,13 +481,13 @@ fn opADC(self : CPU, info : StepInfo) -> Unit {
 
 // AND - Logical and
 // ** opcode name changed
-fn opAND(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opAND(self : CPU, info : StepInfo) -> Unit {
   self.a = self.a & self.mem[info.address] // self.a & self.mem[info.address]
   self.setZN(self.a)
 }
 
 // ASL - Arithmetic shift left
-fn opASL(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opASL(self : CPU, info : StepInfo) -> Unit {
   match info.mode {
     Accumulator => {
       self.c = ((self.a >> 7) & (1 |> to_u8())) != (0 |> to_u8()) // (self.a >> 7) & 1
@@ -505,28 +505,28 @@ fn opASL(self : CPU, info : StepInfo) -> Unit {
 }
 
 // BCC - Branch if carry clear
-fn opBCC(self : CPU, info : StepInfo) -> Unit {
-  if self.c.not() {
+fn CPU::opBCC(self : CPU, info : StepInfo) -> Unit {
+  if not(self.c) {
     self.branch(info)
   }
 }
 
 // BCS - Branch if carry set
-fn opBCS(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opBCS(self : CPU, info : StepInfo) -> Unit {
   if self.c {
     self.branch(info)
   }
 }
 
 // BEQ - Branch if equal
-fn opBEQ(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opBEQ(self : CPU, info : StepInfo) -> Unit {
   if self.z {
     self.branch(info)
   }
 }
 
 // BIT - Bit test
-fn opBIT(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opBIT(self : CPU, info : StepInfo) -> Unit {
   let val = self.mem[info.address] // :- same as go!
   self.v = ((val >> 6) & (1 |> to_u8())) != (0 |> to_u8()) // (val >> 6) & 1
   self.setZ(val & self.a) // val & self.A
@@ -534,28 +534,28 @@ fn opBIT(self : CPU, info : StepInfo) -> Unit {
 }
 
 // BMI - Branch if minus
-fn opBMI(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opBMI(self : CPU, info : StepInfo) -> Unit {
   if self.n {
     self.branch(info)
   }
 }
 
 // BNE - Branch if minus
-fn opBNE(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opBNE(self : CPU, info : StepInfo) -> Unit {
   if not(self.z) {
     self.branch(info)
   }
 }
 
 // BPL - Branch if positive
-fn opBPL(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opBPL(self : CPU, info : StepInfo) -> Unit {
   if not(self.n) {
     self.branch(info)
   }
 }
 
 // BRK - Force interrupt
-fn opBRK(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opBRK(self : CPU, info : StepInfo) -> Unit {
   self.push16(self.pc)
   self.opPHP(info)
   self.opSEI(info)
@@ -563,133 +563,133 @@ fn opBRK(self : CPU, info : StepInfo) -> Unit {
 }
 
 // BVC - Branch if overflow clear
-fn opBVC(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opBVC(self : CPU, info : StepInfo) -> Unit {
   if not(self.v) {
     self.branch(info)
   }
 }
 
 // BVS - Branch if overflow set
-fn opBVS(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opBVS(self : CPU, info : StepInfo) -> Unit {
   if self.v {
     self.branch(info)
   }
 }
 
 // CLC - Clear carry flag
-fn opCLC(self : CPU, _info : StepInfo) -> Unit {
+fn CPU::opCLC(self : CPU, _info : StepInfo) -> Unit {
   self.c = false
 }
 
 // CLD - Clear decimal mode
-fn opCLD(self : CPU, _info : StepInfo) -> Unit {
+fn CPU::opCLD(self : CPU, _info : StepInfo) -> Unit {
   self.d = false
 }
 
 // CLI - Clear interrupt disable
-fn opCLI(self : CPU, _info : StepInfo) -> Unit {
+fn CPU::opCLI(self : CPU, _info : StepInfo) -> Unit {
   self.i = false
 }
 
 // CLV - Clear overflow flag
-fn opCLV(self : CPU, _info : StepInfo) -> Unit {
+fn CPU::opCLV(self : CPU, _info : StepInfo) -> Unit {
   self.v = false
 }
 
 // CMP - Compare
-fn opCMP(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opCMP(self : CPU, info : StepInfo) -> Unit {
   self.compare(self.a, self.mem[info.address])
 }
 
 // CPX - Compare x register
-fn opCPX(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opCPX(self : CPU, info : StepInfo) -> Unit {
   self.compare(self.x, self.mem[info.address])
 }
 
 // CPY - Compare y register
-fn opCPY(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opCPY(self : CPU, info : StepInfo) -> Unit {
   self.compare(self.y, self.mem[info.address])
 }
 
 // DEC - Decrement memory
 // **opcode name
-fn opDEC(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opDEC(self : CPU, info : StepInfo) -> Unit {
   let val = self.mem[info.address] - (1 |> to_u8())
   self.mem[info.address] = val
   self.setZN(val)
 }
 
 // DEX - Decrement x register
-fn opDEX(self : CPU, _info : StepInfo) -> Unit {
+fn CPU::opDEX(self : CPU, _info : StepInfo) -> Unit {
   self.x = self.x - (1 |> to_u8()) // self.x--
   self.setZN(self.x)
 }
 
 // DEY - Decrement y register
-fn opDEY(self : CPU, _info : StepInfo) -> Unit {
+fn CPU::opDEY(self : CPU, _info : StepInfo) -> Unit {
   self.y = self.y - (1 |> to_u8()) // self.y--
   self.setZN(self.y)
 }
 
 // EOR - Exclusive or
-fn opEOR(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opEOR(self : CPU, info : StepInfo) -> Unit {
   self.a = self.a ^ self.mem[info.address]
   self.setZN(self.a)
 }
 
 // INC - Increment memory
 // **opcode name
-fn opINC(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opINC(self : CPU, info : StepInfo) -> Unit {
   let val = self.mem[info.address] + (1 |> to_u8())
   self.mem[info.address] = val
   self.setZN(val)
 }
 
 // INX - Increment x register
-fn opINX(self : CPU, _info : StepInfo) -> Unit {
+fn CPU::opINX(self : CPU, _info : StepInfo) -> Unit {
   self.x = self.x + (1 |> to_u8()) //self.x++
   self.setZN(self.x)
 }
 
 // INY - Increment y register
-fn opINY(self : CPU, _info : StepInfo) -> Unit {
+fn CPU::opINY(self : CPU, _info : StepInfo) -> Unit {
   self.y = self.y + (1 |> to_u8()) // self.y++
   self.setZN(self.y)
 }
 
 // JMP - Jump
-fn opJMP(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opJMP(self : CPU, info : StepInfo) -> Unit {
   self.pc = info.address
   // addr_hex := self.pc.to_hex()
   // log_string("JMP \(addr_hex)")
 }
 
 // JSR - Jump to subroutine
-fn opJSR(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opJSR(self : CPU, info : StepInfo) -> Unit {
   self.push16(self.pc - (1 |> to_u16))
   self.pc = info.address
 }
 
 // LDA - Load accumulator
-fn opLDA(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opLDA(self : CPU, info : StepInfo) -> Unit {
   self.a = self.mem[info.address]
   self.setZN(self.a)
 }
 
 // LDX - Load x register
-fn opLDX(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opLDX(self : CPU, info : StepInfo) -> Unit {
   self.x = self.mem[info.address]
   self.setZN(self.x)
 }
 
 // LDY - Load y register
-fn opLDY(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opLDY(self : CPU, info : StepInfo) -> Unit {
   self.y = self.mem[info.address]
   self.setZN(self.y)
 }
 
 // LSR - Logical shift right
-fn opLSR(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opLSR(self : CPU, info : StepInfo) -> Unit {
   match info.mode {
     Accumulator => {
       self.c = (self.a & (1 |> to_u8())) != (0 |> to_u8()) // self.A & 1
@@ -707,39 +707,39 @@ fn opLSR(self : CPU, info : StepInfo) -> Unit {
 }
 
 // NOP - No operation
-fn opNOP(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opNOP(self : CPU, info : StepInfo) -> Unit {
 
 }
 
 // ORA - Logical inclusive or
-fn opORA(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opORA(self : CPU, info : StepInfo) -> Unit {
   self.a = self.a | self.mem[info.address]
   self.setZN(self.a)
 }
 
 // PHA - Push accumulator
-fn opPHA(self : CPU, _info : StepInfo) -> Unit {
+fn CPU::opPHA(self : CPU, _info : StepInfo) -> Unit {
   self.push(self.a)
 }
 
 // PHP - Push processor status
-fn opPHP(self : CPU, _info : StepInfo) -> Unit {
+fn CPU::opPHP(self : CPU, _info : StepInfo) -> Unit {
   self.push(self.flags() | (0x10 |> to_u8()))
 }
 
 // PLA - Pull accumulator
-fn opPLA(self : CPU, _info : StepInfo) -> Unit {
+fn CPU::opPLA(self : CPU, _info : StepInfo) -> Unit {
   self.a = self.pull()
   self.setZN(self.a)
 }
 
 // PLP - Pull processor status
-fn opPLP(self : CPU, _info : StepInfo) -> Unit {
+fn CPU::opPLP(self : CPU, _info : StepInfo) -> Unit {
   self.set_flags((self.pull() & (0xEF |> to_u8())) | (0x20 |> to_u8())) // pull() & 0xEF | 0x20
 }
 
 // ROL - Rotate left
-fn opROL(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opROL(self : CPU, info : StepInfo) -> Unit {
   let c = self.c |> to_u8()
   match info.mode {
     Accumulator => {
@@ -758,7 +758,7 @@ fn opROL(self : CPU, info : StepInfo) -> Unit {
 }
 
 // ROR - Rotate right
-fn opROR(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opROR(self : CPU, info : StepInfo) -> Unit {
   let c = self.c |> to_u8()
   match info.mode {
     Accumulator => {
@@ -777,18 +777,18 @@ fn opROR(self : CPU, info : StepInfo) -> Unit {
 }
 
 // RTI - Return from interrupt
-fn opRTI(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opRTI(self : CPU, info : StepInfo) -> Unit {
   self.set_flags((self.pull() & (0xEF |> to_u8())) | (0x20 |> to_u8())) // pull() & 0xEF | 0x20
   self.pc = self.pull16()
 }
 
 // RTS - Return from subrouting
-fn opRTS(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opRTS(self : CPU, info : StepInfo) -> Unit {
   self.pc = self.pull16() + (1 |> to_u16)
 }
 
 // SBC - Subtract with carry
-fn opSBC(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opSBC(self : CPU, info : StepInfo) -> Unit {
   let a = self.a
   let b = self.mem[info.address]
   let c = self.c |> to_u8()
@@ -800,66 +800,66 @@ fn opSBC(self : CPU, info : StepInfo) -> Unit {
 }
 
 // SEC - Set carry flag
-fn opSEC(self : CPU, _info : StepInfo) -> Unit {
+fn CPU::opSEC(self : CPU, _info : StepInfo) -> Unit {
   self.c = true
 }
 
 // SED - Set decimal flag
-fn opSED(self : CPU, _info : StepInfo) -> Unit {
+fn CPU::opSED(self : CPU, _info : StepInfo) -> Unit {
   self.d = true
 }
 
 // SEI - Set interrupt disable
-fn opSEI(self : CPU, _info : StepInfo) -> Unit {
+fn CPU::opSEI(self : CPU, _info : StepInfo) -> Unit {
   self.i = true
 }
 
 // STA - Store accumulator
-fn opSTA(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opSTA(self : CPU, info : StepInfo) -> Unit {
   self.mem[info.address] = self.a
 }
 
 // STX - Store x register
-fn opSTX(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opSTX(self : CPU, info : StepInfo) -> Unit {
   self.mem[info.address] = self.x
 }
 
 // STY - Store y register
-fn opSTY(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opSTY(self : CPU, info : StepInfo) -> Unit {
   self.mem[info.address] = self.y
 }
 
 // TAX - Transfer accumulator to x
-fn opTAX(self : CPU, _info : StepInfo) -> Unit {
+fn CPU::opTAX(self : CPU, _info : StepInfo) -> Unit {
   self.x = self.a
   self.setZN(self.x)
 }
 
 // TAY - Transfer accumulator to y
-fn opTAY(self : CPU, _info : StepInfo) -> Unit {
+fn CPU::opTAY(self : CPU, _info : StepInfo) -> Unit {
   self.y = self.a
   self.setZN(self.y)
 }
 
 // TSX - Transfer stack pointer to x
-fn opTSX(self : CPU, _info : StepInfo) -> Unit {
+fn CPU::opTSX(self : CPU, _info : StepInfo) -> Unit {
   self.x = self.sp
   self.setZN(self.x)
 }
 
 // TXA - Transfer x to accumulator
-fn opTXA(self : CPU, _info : StepInfo) -> Unit {
+fn CPU::opTXA(self : CPU, _info : StepInfo) -> Unit {
   self.a = self.x
   self.setZN(self.a)
 }
 
 // TXS - Transfer x to stack pointer
-fn opTXS(self : CPU, _info : StepInfo) -> Unit {
+fn CPU::opTXS(self : CPU, _info : StepInfo) -> Unit {
   self.sp = self.x
 }
 
 // TYA - Transfer y to accumulator
-fn opTYA(self : CPU, _info : StepInfo) -> Unit {
+fn CPU::opTYA(self : CPU, _info : StepInfo) -> Unit {
   self.a = self.y
   self.setZN(self.a)
 }
@@ -867,55 +867,55 @@ fn opTYA(self : CPU, _info : StepInfo) -> Unit {
 // # Illegal opcodes
 // https://www.nesdev.org/wiki/CPU_unofficial_opcodes
 // https://www.nesdev.org/wiki/Programming_with_unofficial_opcodes
-fn opAHX(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opAHX(self : CPU, info : StepInfo) -> Unit {
   println("unimplemented: AHX")
   //abort("AHX")
 }
 
-fn opALR(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opALR(self : CPU, info : StepInfo) -> Unit {
   println("unimplemented: ALR")
   //abort("ALR")
 }
 
-fn opANC(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opANC(self : CPU, info : StepInfo) -> Unit {
   println("unimplemented: ANC")
   //abort("ANC")
 }
 
-fn opARR(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opARR(self : CPU, info : StepInfo) -> Unit {
   println("unimplemented: ARR")
   //abort("ARR")
 }
 
-fn opAXS(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opAXS(self : CPU, info : StepInfo) -> Unit {
   println("unimplemented: AXS")
   //abort("AXS")
 }
 
-fn opDCP(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opDCP(self : CPU, info : StepInfo) -> Unit {
   // Equivalent to DEC value then CMP value, except supporting more addressing modes.
   // LDA #$FF followed by DCP can be used to check if the decrement underflows, which is useful for multi-byte decrements.
   self.opDEC(info)
   self.opCMP(info)
 }
 
-fn opISC(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opISC(self : CPU, info : StepInfo) -> Unit {
   // Equivalent to INC value then SBC value, except supporting more addressing modes.
   self.opINC(info)
   self.opSBC(info)
 }
 
-fn opKIL(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opKIL(self : CPU, info : StepInfo) -> Unit {
   println("unimplemented: KIL")
   //abort("KIL")
 }
 
-fn opLAS(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opLAS(self : CPU, info : StepInfo) -> Unit {
   println("unimplemented: LAS")
   //abort("LAS")
 }
 
-fn opLAX(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opLAX(self : CPU, info : StepInfo) -> Unit {
   // Shortcut for LDA value then TAX. Saves a byte and two cycles and allows use of the X register with the (d),Y addressing mode.
   // Notice that the immediate is missing; the opcode that would have been LAX is affected by line noise on the data bus.
   // MOS 6502: even the bugs have bugs.
@@ -923,55 +923,55 @@ fn opLAX(self : CPU, info : StepInfo) -> Unit {
   self.opTAX(info)
 }
 
-fn opRLA(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opRLA(self : CPU, info : StepInfo) -> Unit {
   // Equivalent to ROL value then AND value, except supporting more addressing modes.
   // LDA #$FF followed by RLA is an efficient way to rotate a variable while also loading it in A.
   self.opROL(info)
   self.opAND(info)
 }
 
-fn opRRA(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opRRA(self : CPU, info : StepInfo) -> Unit {
   // Equivalent to ROR value then ADC value, except supporting more addressing modes.
   // Essentially this computes A + value / 2, where value is 9-bit and the division is rounded up.
   self.opROR(info)
   self.opADC(info)
 }
 
-fn opSAX(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opSAX(self : CPU, info : StepInfo) -> Unit {
   // Stores the bitwise AND of A and X. As with STA and STX, no flags are affected.
   self.mem[info.address] = self.a & self.x
 }
 
-fn opSHX(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opSHX(self : CPU, info : StepInfo) -> Unit {
   println("unimplemented: SHX")
   //abort("SHX")
 }
 
-fn opSHY(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opSHY(self : CPU, info : StepInfo) -> Unit {
   println("unimplemented: SHY")
   //abort("SHY")
 }
 
-fn opSLO(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opSLO(self : CPU, info : StepInfo) -> Unit {
   // Equivalent to ASL value then ORA value, except supporting more addressing modes.
   // LDA #0 followed by SLO is an efficient way to shift a variable while also loading it in A.
   self.opASL(info)
   self.opORA(info)
 }
 
-fn opSRE(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opSRE(self : CPU, info : StepInfo) -> Unit {
   // Equivalent to LSR value then EOR value, except supporting more addressing modes.
   // LDA #0 followed by SRE is an efficient way to shift a variable while also loading it in A.
   self.opLSR(info)
   self.opEOR(info)
 }
 
-fn opTAS(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opTAS(self : CPU, info : StepInfo) -> Unit {
   println("unimplemented: TAS")
   //abort("TAS")
 }
 
-fn opXAA(self : CPU, info : StepInfo) -> Unit {
+fn CPU::opXAA(self : CPU, info : StepInfo) -> Unit {
   println("unimplemented: XAA")
   //abort("XAA")
 }
@@ -979,38 +979,38 @@ fn opXAA(self : CPU, info : StepInfo) -> Unit {
 // 6502/6510/8500/8502 Opcode matrix:
 // http://www.oxyron.de/html/opcodes02.html
 let instructions: FixedArray[(CPU, StepInfo) -> Unit] = [ // All 6502 instructions
-	opBRK, opORA, opKIL, opSLO, opNOP, opORA, opASL, opSLO,//0
-	opPHP, opORA, opASL, opANC, opNOP, opORA, opASL, opSLO,
-	opBPL, opORA, opKIL, opSLO, opNOP, opORA, opASL, opSLO,//1
-	opCLC, opORA, opNOP, opSLO, opNOP, opORA, opASL, opSLO,
-	opJSR, opAND, opKIL, opRLA, opBIT, opAND, opROL, opRLA,//2
-	opPLP, opAND, opROL, opANC, opBIT, opAND, opROL, opRLA,
-	opBMI, opAND, opKIL, opRLA, opNOP, opAND, opROL, opRLA,//3
-	opSEC, opAND, opNOP, opRLA, opNOP, opAND, opROL, opRLA,
-	opRTI, opEOR, opKIL, opSRE, opNOP, opEOR, opLSR, opSRE,//4
-	opPHA, opEOR, opLSR, opALR, opJMP, opEOR, opLSR, opSRE,
-	opBVC, opEOR, opKIL, opSRE, opNOP, opEOR, opLSR, opSRE,//5
-	opCLI, opEOR, opNOP, opSRE, opNOP, opEOR, opLSR, opSRE,
-	opRTS, opADC, opKIL, opRRA, opNOP, opADC, opROR, opRRA,//6
-	opPLA, opADC, opROR, opARR, opJMP, opADC, opROR, opRRA,
-	opBVS, opADC, opKIL, opRRA, opNOP, opADC, opROR, opRRA,//7
-	opSEI, opADC, opNOP, opRRA, opNOP, opADC, opROR, opRRA,
-	opNOP, opSTA, opNOP, opSAX, opSTY, opSTA, opSTX, opSAX,//8
-	opDEY, opNOP, opTXA, opXAA, opSTY, opSTA, opSTX, opSAX,
-	opBCC, opSTA, opKIL, opAHX, opSTY, opSTA, opSTX, opSAX,//9
-	opTYA, opSTA, opTXS, opTAS, opSHY, opSTA, opSHX, opAHX,
-	opLDY, opLDA, opLDX, opLAX, opLDY, opLDA, opLDX, opLAX,//A
-	opTAY, opLDA, opTAX, opLAX, opLDY, opLDA, opLDX, opLAX,
-	opBCS, opLDA, opKIL, opLAX, opLDY, opLDA, opLDX, opLAX,//B
-	opCLV, opLDA, opTSX, opLAS, opLDY, opLDA, opLDX, opLAX,
-	opCPY, opCMP, opNOP, opDCP, opCPY, opCMP, opDEC, opDCP,//C
-	opINY, opCMP, opDEX, opAXS, opCPY, opCMP, opDEC, opDCP,
-	opBNE, opCMP, opKIL, opDCP, opNOP, opCMP, opDEC, opDCP,//D
-	opCLD, opCMP, opNOP, opDCP, opNOP, opCMP, opDEC, opDCP,
-	opCPX, opSBC, opNOP, opISC, opCPX, opSBC, opINC, opISC,//E
-	opINX, opSBC, opNOP, opSBC, opCPX, opSBC, opINC, opISC,
-	opBEQ, opSBC, opKIL, opISC, opNOP, opSBC, opINC, opISC,//F
-   opSED, opSBC, opNOP, opISC, opNOP, opSBC, opINC, opISC,
+	CPU::opBRK, CPU::opORA, CPU::opKIL, CPU::opSLO, CPU::opNOP, CPU::opORA, CPU::opASL, CPU::opSLO,//0
+	CPU::opPHP, CPU::opORA, CPU::opASL, CPU::opANC, CPU::opNOP, CPU::opORA, CPU::opASL, CPU::opSLO,
+	CPU::opBPL, CPU::opORA, CPU::opKIL, CPU::opSLO, CPU::opNOP, CPU::opORA, CPU::opASL, CPU::opSLO,//1
+	CPU::opCLC, CPU::opORA, CPU::opNOP, CPU::opSLO, CPU::opNOP, CPU::opORA, CPU::opASL, CPU::opSLO,
+	CPU::opJSR, CPU::opAND, CPU::opKIL, CPU::opRLA, CPU::opBIT, CPU::opAND, CPU::opROL, CPU::opRLA,//2
+	CPU::opPLP, CPU::opAND, CPU::opROL, CPU::opANC, CPU::opBIT, CPU::opAND, CPU::opROL, CPU::opRLA,
+	CPU::opBMI, CPU::opAND, CPU::opKIL, CPU::opRLA, CPU::opNOP, CPU::opAND, CPU::opROL, CPU::opRLA,//3
+	CPU::opSEC, CPU::opAND, CPU::opNOP, CPU::opRLA, CPU::opNOP, CPU::opAND, CPU::opROL, CPU::opRLA,
+	CPU::opRTI, CPU::opEOR, CPU::opKIL, CPU::opSRE, CPU::opNOP, CPU::opEOR, CPU::opLSR, CPU::opSRE,//4
+	CPU::opPHA, CPU::opEOR, CPU::opLSR, CPU::opALR, CPU::opJMP, CPU::opEOR, CPU::opLSR, CPU::opSRE,
+	CPU::opBVC, CPU::opEOR, CPU::opKIL, CPU::opSRE, CPU::opNOP, CPU::opEOR, CPU::opLSR, CPU::opSRE,//5
+	CPU::opCLI, CPU::opEOR, CPU::opNOP, CPU::opSRE, CPU::opNOP, CPU::opEOR, CPU::opLSR, CPU::opSRE,
+	CPU::opRTS, CPU::opADC, CPU::opKIL, CPU::opRRA, CPU::opNOP, CPU::opADC, CPU::opROR, CPU::opRRA,//6
+	CPU::opPLA, CPU::opADC, CPU::opROR, CPU::opARR, CPU::opJMP, CPU::opADC, CPU::opROR, CPU::opRRA,
+	CPU::opBVS, CPU::opADC, CPU::opKIL, CPU::opRRA, CPU::opNOP, CPU::opADC, CPU::opROR, CPU::opRRA,//7
+	CPU::opSEI, CPU::opADC, CPU::opNOP, CPU::opRRA, CPU::opNOP, CPU::opADC, CPU::opROR, CPU::opRRA,
+	CPU::opNOP, CPU::opSTA, CPU::opNOP, CPU::opSAX, CPU::opSTY, CPU::opSTA, CPU::opSTX, CPU::opSAX,//8
+	CPU::opDEY, CPU::opNOP, CPU::opTXA, CPU::opXAA, CPU::opSTY, CPU::opSTA, CPU::opSTX, CPU::opSAX,
+	CPU::opBCC, CPU::opSTA, CPU::opKIL, CPU::opAHX, CPU::opSTY, CPU::opSTA, CPU::opSTX, CPU::opSAX,//9
+	CPU::opTYA, CPU::opSTA, CPU::opTXS, CPU::opTAS, CPU::opSHY, CPU::opSTA, CPU::opSHX, CPU::opAHX,
+	CPU::opLDY, CPU::opLDA, CPU::opLDX, CPU::opLAX, CPU::opLDY, CPU::opLDA, CPU::opLDX, CPU::opLAX,//A
+	CPU::opTAY, CPU::opLDA, CPU::opTAX, CPU::opLAX, CPU::opLDY, CPU::opLDA, CPU::opLDX, CPU::opLAX,
+	CPU::opBCS, CPU::opLDA, CPU::opKIL, CPU::opLAX, CPU::opLDY, CPU::opLDA, CPU::opLDX, CPU::opLAX,//B
+	CPU::opCLV, CPU::opLDA, CPU::opTSX, CPU::opLAS, CPU::opLDY, CPU::opLDA, CPU::opLDX, CPU::opLAX,
+	CPU::opCPY, CPU::opCMP, CPU::opNOP, CPU::opDCP, CPU::opCPY, CPU::opCMP, CPU::opDEC, CPU::opDCP,//C
+	CPU::opINY, CPU::opCMP, CPU::opDEX, CPU::opAXS, CPU::opCPY, CPU::opCMP, CPU::opDEC, CPU::opDCP,
+	CPU::opBNE, CPU::opCMP, CPU::opKIL, CPU::opDCP, CPU::opNOP, CPU::opCMP, CPU::opDEC, CPU::opDCP,//D
+	CPU::opCLD, CPU::opCMP, CPU::opNOP, CPU::opDCP, CPU::opNOP, CPU::opCMP, CPU::opDEC, CPU::opDCP,
+	CPU::opCPX, CPU::opSBC, CPU::opNOP, CPU::opISC, CPU::opCPX, CPU::opSBC, CPU::opINC, CPU::opISC,//E
+	CPU::opINX, CPU::opSBC, CPU::opNOP, CPU::opSBC, CPU::opCPX, CPU::opSBC, CPU::opINC, CPU::opISC,
+	CPU::opBEQ, CPU::opSBC, CPU::opKIL, CPU::opISC, CPU::opNOP, CPU::opSBC, CPU::opINC, CPU::opISC,//F
+  CPU::opSED, CPU::opSBC, CPU::opNOP, CPU::opISC, CPU::opNOP, CPU::opSBC, CPU::opINC, CPU::opISC,
 ]
 
 // instructionNames indicates the name of each instruction
@@ -1152,7 +1152,7 @@ let
 
 
 // Non-maskable interrupt
-fn nmi(self : CPU) -> Unit {
+fn CPU::nmi(self : CPU) -> Unit {
   self.push16(self.pc)
   self.opPHP(StepInfo::default())
   self.pc = self.mem.read16(0xFFFA |> to_u16)
@@ -1161,7 +1161,7 @@ fn nmi(self : CPU) -> Unit {
 }
 
 // IRQ interrupt
-fn irq(self : CPU) -> Unit {
+fn CPU::irq(self : CPU) -> Unit {
   self.push16(self.pc)
   self.opPHP(StepInfo::default())
   self.pc = self.mem.read16(0xFFFE |> to_u16)
@@ -1169,14 +1169,14 @@ fn irq(self : CPU) -> Unit {
   self.cycles += 7L
 }
 
-fn is_addressed(self : AddressingMode) -> Bool {
+fn AddressingMode::is_addressed(self : AddressingMode) -> Bool {
   match self {
     Accumulator | Implied => false
     _ => true
   }
 }
 
-fn get_addr(self : CPU, mode : AddressingMode) -> UInt16 {
+fn CPU::get_addr(self : CPU, mode : AddressingMode) -> UInt16 {
   match mode {
     Absolute => self.mem.read16(self.pc + (1 |> to_u16))
     AbsoluteX => self.mem.read16(self.pc + (1 |> to_u16)) + (self.x |> to_u16)
@@ -1203,7 +1203,7 @@ fn get_addr(self : CPU, mode : AddressingMode) -> UInt16 {
   }
 }
 
-fn step(self : CPU, trace_log : Bool) -> Int {
+fn CPU::step(self : CPU, trace_log : Bool) -> Int {
   if self.stall > 0 {
     if trace_log {
       println("wait for stall" + self.stall.to_string())

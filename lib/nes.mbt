@@ -17,7 +17,7 @@ fn formatInt3(i : Int) -> String {
 
 //PPU:  0, 21 CYC:7
 // note that this should be called AFTER the instruction is executed
-fn formatCycleInfo(self : NES) -> String {
+fn NES::formatCycleInfo(self : NES) -> String {
   let ppu_x = self.ppu.scanLine |> formatInt3()
   let ppu_y = self.ppu.cycle |> formatInt3()
   let cyc = self.cpu.cycles

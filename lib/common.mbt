@@ -28,13 +28,13 @@ fn bytes_to_int_le(bytes : FixedArray[Int], start : Int) -> Int {
 }
 
 // big endian
-fn readIntBE(self : MemoryReader) -> Int {
+fn MemoryReader::readIntBE(self : MemoryReader) -> Int {
   self.pos = self.pos + 4
   bytes_to_int_be(self.data, self.pos - 4)
 }
 
 // little endian
-fn readIntLE(self : MemoryReader) -> Int {
+fn MemoryReader::readIntLE(self : MemoryReader) -> Int {
   self.pos = self.pos + 4
   bytes_to_int_le(self.data, self.pos - 4)
 }

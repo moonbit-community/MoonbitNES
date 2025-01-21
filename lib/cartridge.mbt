@@ -34,7 +34,7 @@ struct iNESHeader {
   padding : FixedArray[UInt8] // 7 bytes, unused padding
 }
 
-fn readiNESHeader(self : MemoryReader) -> iNESHeader {
+fn MemoryReader::readiNESHeader(self : MemoryReader) -> iNESHeader {
   let magic = self.readIntLE()
   println("magic: \{magic})")
   let numPRG = self.readUInt8()
