@@ -2,6 +2,9 @@ on:
     schedule:
         - cron: '0 10 * * 2'
     pull_request:
+    push:
+      branches:
+        - main
 
 jobs:
     build:
