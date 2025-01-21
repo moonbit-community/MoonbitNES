@@ -8,7 +8,7 @@ pub fn set_image_data(image_data : FixedArray[Int]) -> Unit {
   canvas.val = image_data
 }
 
-fn nes_write_color(offset : Int, ~red : Int, ~green : Int, ~blue : Int) -> Unit {
+fn nes_write_color(offset : Int, red~ : Int, green~ : Int, blue~ : Int) -> Unit {
   canvas.val[offset * 4] = red
   canvas.val[offset * 4 + 1] = green
   canvas.val[offset * 4 + 2] = blue
