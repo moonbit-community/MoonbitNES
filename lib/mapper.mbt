@@ -126,6 +126,10 @@ fn Mapper2::to_string(self : Mapper2) -> String {
   "\{prg_len} \{prgBanks} \{prgBank1} \{prgBank2}"
 }
 
+impl Show for Mapper2 with output(self, logger) -> Unit {
+  logger.write_string(self.to_string())
+}
+
 fn newMapper2(self : NES) -> Mapper {
   let mapper = Mapper2::new(self.cartridge)
   println("mapper: \{mapper}")
