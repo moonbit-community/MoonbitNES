@@ -58,23 +58,23 @@ impl Show for UInt16 with output(self, logger) -> Unit {
 }
 
 // TODO: test u8 arithmetic
-fn UInt8::op_add(self : UInt8, rhs : UInt8) -> UInt8 {
+impl Add for UInt8 with op_add(self : UInt8, rhs : UInt8) -> UInt8 {
   self._ + rhs._ |> to_u8
 }
 
-fn UInt8::op_sub(self : UInt8, rhs : UInt8) -> UInt8 {
+impl Sub for UInt8 with op_sub(self : UInt8, rhs : UInt8) -> UInt8 {
   self._ - rhs._ |> to_u8
 }
 
-fn UInt16::op_add(self : UInt16, rhs : UInt16) -> UInt16 {
+impl Add for UInt16 with op_add(self : UInt16, rhs : UInt16) -> UInt16 {
   self._ + rhs._ |> to_u16
 }
 
-fn UInt16::op_sub(self : UInt16, rhs : UInt16) -> UInt16 {
+impl Sub for UInt16 with op_sub(self : UInt16, rhs : UInt16) -> UInt16 {
   self._ - rhs._ |> to_u16
 }
 
-fn UInt16::op_mod(self : UInt16, rhs : UInt16) -> UInt16 {
+impl Mod for UInt16 with op_mod(self : UInt16, rhs : UInt16) -> UInt16 {
   self._ % rhs._ |> to_u16
 }
 
@@ -116,51 +116,51 @@ impl U64 for UInt8 with u64(self : UInt8) -> UInt64 {
 }
 
 // `bit` is usually a constant, so `Int` is easier to use
-fn UInt8::op_shl(self : UInt8, bit : Int) -> UInt8 {
+impl Shl for UInt8 with op_shl(self : UInt8, bit : Int) -> UInt8 {
   self._ << bit |> to_u8
 }
 
-fn UInt16::op_shl(self : UInt16, bit : Int) -> UInt16 {
+impl Shl for UInt16 with op_shl(self : UInt16, bit : Int) -> UInt16 {
   self._ << bit |> to_u16
 }
 
-fn UInt8::op_shr(self : UInt8, bit : Int) -> UInt8 {
+impl Shr for UInt8 with op_shr(self : UInt8, bit : Int) -> UInt8 {
   self._.reinterpret_as_uint() >> bit |> UInt::reinterpret_as_int |> to_u8
 }
 
-fn UInt16::op_shr(self : UInt16, bit : Int) -> UInt16 {
+impl Shr for UInt16 with op_shr(self : UInt16, bit : Int) -> UInt16 {
   self._.reinterpret_as_uint() >> bit |> UInt::reinterpret_as_int |> to_u16
 }
 
-fn UInt32::op_shr(self : UInt32, bit : Int) -> UInt32 {
+impl Shr for UInt32 with op_shr(self : UInt32, bit : Int) -> UInt32 {
   self._ >> bit |> to_u32
 }
 
-fn UInt8::lor(self : UInt8, bit : UInt8) -> UInt8 {
+impl BitOr for UInt8 with lor(self : UInt8, bit : UInt8) -> UInt8 {
   self._ | bit._ |> to_u8
 }
 
-fn UInt16::lor(self : UInt16, bit : UInt16) -> UInt16 {
+impl BitOr for UInt16 with lor(self : UInt16, bit : UInt16) -> UInt16 {
   self._ | bit._ |> to_u16
 }
 
-fn UInt8::land(self : UInt8, rhs : UInt8) -> UInt8 {
+impl BitAnd for UInt8 with land(self : UInt8, rhs : UInt8) -> UInt8 {
   self._ & rhs._ |> to_u8
 }
 
-fn UInt16::land(self : UInt16, rhs : UInt16) -> UInt16 {
+impl BitAnd for UInt16 with land(self : UInt16, rhs : UInt16) -> UInt16 {
   self._ & rhs._ |> to_u16
 }
 
-fn UInt32::land(self : UInt32, rhs : UInt32) -> UInt32 {
+impl BitAnd for UInt32 with land(self : UInt32, rhs : UInt32) -> UInt32 {
   self._ & rhs._ |> to_u32
 }
 
-fn UInt8::lxor(self : UInt8, rhs : UInt8) -> UInt8 {
+impl BitXOr for UInt8 with lxor(self : UInt8, rhs : UInt8) -> UInt8 {
   self._ ^ rhs._ |> to_u8
 }
 
-fn UInt16::lxor(self : UInt16, rhs : UInt16) -> UInt16 {
+impl BitXOr for UInt16 with lxor(self : UInt16, rhs : UInt16) -> UInt16 {
   self._ ^ rhs._ |> to_u16
 }
 

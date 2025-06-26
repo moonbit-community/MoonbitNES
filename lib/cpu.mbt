@@ -62,7 +62,7 @@ enum AddressingMode {
   ZeroPageY
 } derive(Eq)
 
-fn AddressingMode::default() -> AddressingMode {
+impl Default for AddressingMode with default() -> AddressingMode {
   Absolute
 }
 

@@ -81,11 +81,11 @@ struct Mapper2 {
   prgBank2 : Int
 }
 
-fn Mapper2::step(self : Mapper2) -> Unit {
+impl IMapper for Mapper2 with step(self : Mapper2) -> Unit {
 
 }
 
-fn Mapper2::idx(self : Mapper2, adr : UInt16) -> UInt8 {
+impl IMapper for Mapper2 with idx(self : Mapper2, adr : UInt16) -> UInt8 {
   if adr >= (0x0000 |> to_u16) && adr <= (0x1FFF |> to_u16) {
     return self.cartridge.chr[adr._]
   } else if adr >= (0x6000 |> to_u16) && adr <= (0x7FFF |> to_u16) {
@@ -101,7 +101,7 @@ fn Mapper2::idx(self : Mapper2, adr : UInt16) -> UInt8 {
   }
 } // should raise exception
 
-fn Mapper2::idxSet(self : Mapper2, adr : UInt16, val : UInt8) -> Unit {
+impl IMapper for Mapper2 with idxSet(self : Mapper2, adr : UInt16, val : UInt8) -> Unit {
   if adr >= (0x0000 |> to_u16) && adr <= (0x1FFF |> to_u16) {
     self.cartridge.chr[adr._] = val // "but most emulators support RAM"
   } else if adr >= (0x6000 |> to_u16) && adr <= (0x7FFF |> to_u16) {
@@ -151,11 +151,11 @@ struct Mapper1 {
   chrOffsets : FixedArray[Int] // cnt=2
 }
 
-fn Mapper1::step(self : Mapper1) -> Unit {
+impl IMapper for Mapper1 with step(self : Mapper1) -> Unit {
 
 }
 
-fn Mapper1::idx(self : Mapper1, adr : UInt16) -> UInt8 {
+impl IMapper for Mapper1 with idx(self : Mapper1, adr : UInt16) -> UInt8 {
   let mut address = adr._
   if address < 0x2000 {
     let bank = address / 0x1000
@@ -173,7 +173,7 @@ fn Mapper1::idx(self : Mapper1, adr : UInt16) -> UInt8 {
   }
 }
 
-fn Mapper1::idxSet(self : Mapper1, adr : UInt16, val : UInt8) -> Unit {
+impl IMapper for Mapper1 with idxSet(self : Mapper1, adr : UInt16, val : UInt8) -> Unit {
   let address = adr._
   if address < 0x2000 {
     let bank = address / 0x1000
@@ -336,11 +336,11 @@ struct Mapper3 {
   mut prgBank2 : Int
 }
 
-fn Mapper3::step(self : Mapper3) -> Unit {
+impl IMapper for Mapper3 with step(self : Mapper3) -> Unit {
 
 }
 
-fn Mapper3::idx(self : Mapper3, adr : UInt16) -> UInt8 {
+impl IMapper for Mapper3 with idx(self : Mapper3, adr : UInt16) -> UInt8 {
   if adr < (0x2000 |> to_u16) {
     let index = self.chrBank * 0x2000 + adr._
     self.cartridge.chr[index]
@@ -358,7 +358,7 @@ fn Mapper3::idx(self : Mapper3, adr : UInt16) -> UInt8 {
   }
 }
 
-fn Mapper3::idxSet(self : Mapper3, adr : UInt16, val : UInt8) -> Unit {
+impl IMapper for Mapper3 with idxSet(self : Mapper3, adr : UInt16, val : UInt8) -> Unit {
   if adr < (0x2000 |> to_u16) {
     let index = self.chrBank * 0x2000 + adr._
     self.cartridge.chr[index] = val
@@ -401,7 +401,7 @@ struct Mapper4 {
   mut irqEnable : Bool
 }
 
-fn Mapper4::step(self : Mapper4) -> Unit {
+impl IMapper for Mapper4 with step(self : Mapper4) -> Unit {
   let ppu = self.console.ppu
   if ppu.cycle != 280 { // TODO: this *should* be 260
     return
@@ -415,7 +415,7 @@ fn Mapper4::step(self : Mapper4) -> Unit {
   self.handleScanLine()
 }
 
-fn Mapper4::idx(self : Mapper4, adr : UInt16) -> UInt8 {
+impl IMapper for Mapper4 with idx(self : Mapper4, adr : UInt16) -> UInt8 {
   let mut address = adr._
   if address < 0x2000 {
     let bank = address / 0x0400
@@ -434,7 +434,7 @@ fn Mapper4::idx(self : Mapper4, adr : UInt16) -> UInt8 {
   return 0 |> to_u8
 }
 
-fn Mapper4::idxSet(self : Mapper4, adr : UInt16, val : UInt8) -> Unit {
+impl IMapper for Mapper4 with idxSet(self : Mapper4, adr : UInt16, val : UInt8) -> Unit {
   let address = adr._
   if address < 0x2000 {
     let bank = address / 0x0400
@@ -616,15 +616,15 @@ struct Mapper7 {
   prgBank : Int
 }
 
-fn Mapper7::step(self : Mapper7) -> Unit {
+impl IMapper for Mapper7 with step(self : Mapper7) -> Unit {
 
 }
 
-fn Mapper7::idx(self : Mapper7, adr : UInt16) -> UInt8 {
+impl IMapper for Mapper7 with idx(self : Mapper7, adr : UInt16) -> UInt8 {
   0 |> to_u8
 }
 
-fn Mapper7::idxSet(self : Mapper7, adr : UInt16, val : UInt8) -> Unit {
+impl IMapper for Mapper7 with idxSet(self : Mapper7, adr : UInt16, val : UInt8) -> Unit {
 
 }
 
