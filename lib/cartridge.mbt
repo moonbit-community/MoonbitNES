@@ -2,6 +2,7 @@
 // Copyright (c) 2015 Dennis Felsing
 // Copyright (c) 2024 Liu Rujia, International Digital Economy Academy
 
+///|
 struct Cartridge {
   prg : FixedArray[UInt8] // PRG-ROM banks
   chr : FixedArray[UInt8] // CHR-ROM banks
@@ -11,19 +12,27 @@ struct Cartridge {
   battery : Bool // battery present
 }
 
+///|
 let mirrorHorizontal : UInt8 = 0 |> to_u8()
 
+///|
 let mirrorVertical : UInt8 = 1 |> to_u8()
 
+///|
 let mirrorSingle0 : UInt8 = 2 |> to_u8()
 
+///|
 let mirrorSingle1 : UInt8 = 3 |> to_u8()
 
+///|
 let mirrorFour : UInt8 = 4 |> to_u8()
 
+///|
 let iNESMagic = 0x1A53454E
 
 // I don't want to capitalize but the format is called `iNES`
+
+///|
 struct iNESHeader {
   magic : Int // iNES magic number
   numPRG : UInt8 // number of PRG-ROM banks (16KB each)
@@ -34,6 +43,7 @@ struct iNESHeader {
   padding : FixedArray[UInt8] // 7 bytes, unused padding
 }
 
+///|
 fn MemoryReader::readiNESHeader(self : MemoryReader) -> iNESHeader {
   let magic = self.readIntLE()
   println("magic: \{magic})")
@@ -65,6 +75,7 @@ fn MemoryReader::readiNESHeader(self : MemoryReader) -> iNESHeader {
 // ||||+---- 1: Ignore mirroring control or above mirroring bit; instead provide four-screen VRAM
 // ++++----- Lower nybble of mapper number
 
+///|
 fn newCartridge(data : FixedArray[Int]) -> Cartridge {
   let reader = MemoryReader::new(data)
   let header = reader.readiNESHeader()
@@ -92,8 +103,8 @@ fn newCartridge(data : FixedArray[Int]) -> Cartridge {
       (1 |> to_u8)
     ) !=
     (0 |> to_u8)
-  let prg_len = header.numPRG._ * 16384
-  let chr_len = header.numCHR._ * 8192
+  let prg_len = header.numPRG.inner() * 16384
+  let chr_len = header.numCHR.inner() * 8192
 
   // read trainer if present (unused)
   if (header.control1 & (4 |> to_u8)) == (4 |> to_u8) {

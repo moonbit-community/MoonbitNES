@@ -2,6 +2,7 @@
 // Copyright (c) 2015 Dennis Felsing
 // Copyright (c) 2024 Liu Rujia, International Digital Economy Academy
 
+///|
 struct APU {
   mut nes : NES?
   // chan : FixedArray[Double] // len=4096. go: chan float32
@@ -18,6 +19,7 @@ struct APU {
   //filterChain: FilterChain // used by go
 }
 
+///|
 fn initAPU() -> APU {
   let pulse0 = Pulse::new()
   let pulse1 = Pulse::new()
@@ -41,13 +43,16 @@ fn initAPU() -> APU {
   result
 }
 
+///|
 let frameCounterRate : Double = cpuFrequency / 240.0
 
+///|
 let lengthTable : FixedArray[Int] = [
   10, 254, 20, 2, 40, 4, 80, 6, 160, 8, 60, 10, 14, 12, 26, 14, 12, 16, 24, 18, 48,
   20, 96, 22, 192, 24, 72, 26, 16, 28, 32, 30,
 ]
 
+///|
 let dutyTable : FixedArray[FixedArray[Int]] = [
   [0, 1, 0, 0, 0, 0, 0, 0],
   [0, 1, 1, 0, 0, 0, 0, 0],
@@ -55,26 +60,35 @@ let dutyTable : FixedArray[FixedArray[Int]] = [
   [1, 0, 0, 1, 1, 1, 1, 1],
 ]
 
+///|
 let triangleTable : FixedArray[Int] = [
   15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8,
   9, 10, 11, 12, 13, 14, 15,
 ]
 
 // uint16
+
+///|
 let noiseTable : FixedArray[Int] = [
   4, 8, 16, 32, 64, 96, 128, 160, 202, 254, 380, 508, 762, 1016, 2034, 4068,
 ]
 
 // uint8
+
+///|
 let dmcTable : FixedArray[Int] = [
   214, 190, 170, 160, 143, 127, 113, 107, 95, 80, 71, 64, 53, 42, 36, 27,
 ]
 
 // float32
+
+///|
 let pulseTable : FixedArray[Double] = FixedArray::make(31, 0.0)
 
+///|
 let tndTable : FixedArray[Double] = FixedArray::make(203, 0.0)
 
+///|
 fn APU::step(self : APU, trace_log : Bool) -> Unit {
   let cycle1 = self.cycle
   self.cycle = self.cycle + 1L
@@ -98,6 +112,8 @@ fn APU::step(self : APU, trace_log : Bool) -> Unit {
 }
 
 // we don't support filterChain for now
+
+///|
 fn APU::sendSample(self : APU) -> Unit {
   let output = self.output()
   nes_write_audio_sample(output) // call FFI!
@@ -109,14 +125,16 @@ fn APU::sendSample(self : APU) -> Unit {
 }
 
 // float32
+
+///|
 fn APU::output(self : APU) -> Double {
   let p1 = self.pulse[0].output()
   let p2 = self.pulse[1].output()
   let t = self.triangle.output()
   let n = self.noise.output()
   let d = self.dmc.output()
-  let pulseOut = pulseTable[p1._ + p2._]
-  let tndOut = tndTable[3 * t._ + 2 * n._ + d._]
+  let pulseOut = pulseTable[p1.inner() + p2.inner()]
+  let tndOut = tndTable[3 * t.inner() + 2 * n.inner() + d.inner()]
   return pulseOut + tndOut
 }
 
@@ -125,11 +143,13 @@ fn APU::output(self : APU) -> Double {
 //  - - - f    - - - - -    IRQ (if bit 6 is clear)
 //  - l - l    l - l - -    Length counter and sweep
 //  e e e e    e e e e -    Envelope and linear counter
+
+///|
 fn APU::stepFrameCounter(self : APU) -> Unit {
-  match self.framePeriod._ {
+  match self.framePeriod.inner() {
     4 => {
-      self.frameValue = (self.frameValue._ + 1) % 4 |> to_u8
-      match self.frameValue._ {
+      self.frameValue = ((self.frameValue.inner() + 1) % 4) |> to_u8
+      match self.frameValue.inner() {
         0 | 2 => self.stepEnvelope()
         1 => {
           self.stepEnvelope()
@@ -146,8 +166,8 @@ fn APU::stepFrameCounter(self : APU) -> Unit {
       }
     }
     5 => {
-      self.frameValue = (self.frameValue._ + 1) % 5 |> to_u8
-      match self.frameValue._ {
+      self.frameValue = ((self.frameValue.inner() + 1) % 5) |> to_u8
+      match self.frameValue.inner() {
         0 | 2 => self.stepEnvelope()
         1 | 3 => {
           self.stepEnvelope()
@@ -161,6 +181,7 @@ fn APU::stepFrameCounter(self : APU) -> Unit {
   }
 }
 
+///|
 fn APU::stepTimer(self : APU) -> Unit {
   if self.cycle % 2L == 0L {
     self.pulse[0].stepTimer()
@@ -171,6 +192,7 @@ fn APU::stepTimer(self : APU) -> Unit {
   self.triangle.stepTimer()
 }
 
+///|
 fn APU::stepEnvelope(self : APU) -> Unit {
   self.pulse[0].stepEnvelope()
   self.pulse[1].stepEnvelope()
@@ -178,11 +200,13 @@ fn APU::stepEnvelope(self : APU) -> Unit {
   self.noise.stepEnvelope()
 }
 
+///|
 fn APU::stepSweep(self : APU) -> Unit {
   self.pulse[0].stepSweep()
   self.pulse[1].stepSweep()
 }
 
+///|
 fn APU::stepLength(self : APU) -> Unit {
   self.pulse[0].stepLength()
   self.pulse[1].stepLength()
@@ -190,6 +214,7 @@ fn APU::stepLength(self : APU) -> Unit {
   self.noise.stepLength()
 }
 
+///|
 fn APU::fireIRQ(self : APU) -> Unit {
   let console = self.nes.unwrap()
   if self.frameIRQ {
@@ -197,8 +222,9 @@ fn APU::fireIRQ(self : APU) -> Unit {
   }
 }
 
+///|
 fn APU::readRegister(self : APU, adr : UInt16) -> UInt8 {
-  let address = adr._
+  let address = adr.inner()
   match address {
     0x4015 => return self.readStatus()
     _ => abort("unhandled apu register read")
@@ -208,8 +234,9 @@ fn APU::readRegister(self : APU, adr : UInt16) -> UInt8 {
   return 0 |> to_u8
 }
 
+///|
 fn APU::writeRegister(self : APU, adr : UInt16, val : UInt8) -> Unit {
-  let address = adr._
+  let address = adr.inner()
   match address {
     0x4000 => self.pulse[0].writeControl(val)
     0x4001 => self.pulse[0].writeSweep(val)
@@ -235,28 +262,30 @@ fn APU::writeRegister(self : APU, adr : UInt16, val : UInt8) -> Unit {
   }
 }
 
+///|
 fn APU::readStatus(self : APU) -> UInt8 {
   let mut result = 0
-  if self.pulse[0].lengthValue._ > 0 {
+  if self.pulse[0].lengthValue.inner() > 0 {
     result = result | 1
   }
-  if self.pulse[1].lengthValue._ > 0 {
+  if self.pulse[1].lengthValue.inner() > 0 {
     result = result | 2
   }
-  if self.triangle.lengthValue._ > 0 {
+  if self.triangle.lengthValue.inner() > 0 {
     result = result | 4
   }
-  if self.noise.lengthValue._ > 0 {
+  if self.noise.lengthValue.inner() > 0 {
     result = result | 8
   }
-  if self.dmc.currentLength._ > 0 {
+  if self.dmc.currentLength.inner() > 0 {
     result = result | 16
   }
   result |> to_u8
 }
 
+///|
 fn APU::writeControl(self : APU, val : UInt8) -> Unit {
-  let value = val._
+  let value = val.inner()
   self.pulse[0].enabled = (value & 1) == 1
   self.pulse[1].enabled = (value & 2) == 2
   self.triangle.enabled = (value & 4) == 4
@@ -281,9 +310,10 @@ fn APU::writeControl(self : APU, val : UInt8) -> Unit {
   }
 }
 
+///|
 fn APU::writeFrameCounter(self : APU, val : UInt8) -> Unit {
-  let value = val._ & 0xFF
-  self.framePeriod = 4 + ((value >> 7) & 1) |> to_u8
+  let value = val.inner() & 0xFF
+  self.framePeriod = (4 + ((value >> 7) & 1)) |> to_u8
   self.frameIRQ = ((value >> 6) & 1) == 0
   // self.frameValue = 0
   if self.framePeriod == (5 |> to_u8) {
@@ -293,8 +323,7 @@ fn APU::writeFrameCounter(self : APU, val : UInt8) -> Unit {
   }
 }
 
-//////////////////////// Pulse
-
+///| Pulse
 struct Pulse {
   mut enabled : Bool
   mut channel : UInt8
@@ -319,6 +348,7 @@ struct Pulse {
   mut constantVolume : UInt8
 }
 
+///|
 fn Pulse::new() -> Pulse {
   {
     enabled: false,
@@ -345,58 +375,64 @@ fn Pulse::new() -> Pulse {
   }
 }
 
+///|
 fn Pulse::writeControl(self : Pulse, val : UInt8) -> Unit {
-  let value = val._ & 0xFF
-  self.dutyMode = (value >> 6) & 3 |> to_u8
+  let value = val.inner() & 0xFF
+  self.dutyMode = ((value >> 6) & 3) |> to_u8
   self.lengthEnabled = ((value >> 5) & 1) == 0
   self.envelopeLoop = ((value >> 5) & 1) == 1
   self.envelopeEnabled = ((value >> 4) & 1) == 0
-  self.envelopePeriod = value & 15 |> to_u8
-  self.constantVolume = value & 15 |> to_u8
+  self.envelopePeriod = (value & 15) |> to_u8
+  self.constantVolume = (value & 15) |> to_u8
   self.envelopeStart = true
 }
 
+///|
 fn Pulse::writeSweep(self : Pulse, val : UInt8) -> Unit {
-  let value = val._ & 0xFF
+  let value = val.inner() & 0xFF
   self.sweepEnabled = ((value >> 7) & 1) == 1
-  self.sweepPeriod = ((value >> 4) & 7) + 1 |> to_u8
+  self.sweepPeriod = (((value >> 4) & 7) + 1) |> to_u8
   self.sweepNegate = ((value >> 3) & 1) == 1
-  self.sweepShift = value & 7 |> to_u8
+  self.sweepShift = (value & 7) |> to_u8
   self.sweepReload = true
 }
 
+///|
 fn Pulse::writeTimerLow(self : Pulse, val : UInt8) -> Unit {
-  let value = val._
+  let value = val.inner()
   self.timerPeriod = (self.timerPeriod & (0xFF00 |> to_u16)) | (value |> to_u16)
 }
 
+///|
 fn Pulse::writeTimerHigh(self : Pulse, val : UInt8) -> Unit {
-  let value = val._ & 0xFF
+  let value = val.inner() & 0xFF
   self.lengthValue = lengthTable[value >> 3] |> to_u8
   self.timerPeriod = (self.timerPeriod & (0x00FF |> to_u16)) |
-    ((value & 7) << 8 |> to_u16) // CHECKME
+    (((value & 7) << 8) |> to_u16) // CHECKME
   self.envelopeStart = true
   self.dutyValue = 0 |> to_u8
 }
 
+///|
 fn Pulse::stepTimer(self : Pulse) -> Unit {
-  if self.timerValue._ == 0 {
+  if self.timerValue.inner() == 0 {
     self.timerValue = self.timerPeriod
-    self.dutyValue = (self.dutyValue._ + 1) % 8 |> to_u8
+    self.dutyValue = ((self.dutyValue.inner() + 1) % 8) |> to_u8
   } else {
     self.timerValue = self.timerValue - (1 |> to_u16)
   }
 }
 
+///|
 fn Pulse::stepEnvelope(self : Pulse) -> Unit {
   if self.envelopeStart {
     self.envelopeVolume = 15 |> to_u8
     self.envelopeValue = self.envelopePeriod
     self.envelopeStart = false
-  } else if self.envelopeValue._ > 0 {
+  } else if self.envelopeValue.inner() > 0 {
     self.envelopeValue = self.envelopeValue - (1 |> to_u8)
   } else {
-    if self.envelopeVolume._ > 0 {
+    if self.envelopeVolume.inner() > 0 {
       self.envelopeVolume = self.envelopeVolume - (1 |> to_u8)
     } else if self.envelopeLoop {
       self.envelopeVolume = 15 |> to_u8
@@ -405,14 +441,15 @@ fn Pulse::stepEnvelope(self : Pulse) -> Unit {
   }
 }
 
+///|
 fn Pulse::stepSweep(self : Pulse) -> Unit {
   if self.sweepReload {
-    if self.sweepEnabled && self.sweepValue._ == 0 {
+    if self.sweepEnabled && self.sweepValue.inner() == 0 {
       self.sweep()
     }
     self.sweepValue = self.sweepPeriod
     self.sweepReload = false
-  } else if self.sweepValue._ > 0 {
+  } else if self.sweepValue.inner() > 0 {
     self.sweepValue = self.sweepValue - (1 |> to_u8)
   } else {
     if self.sweepEnabled {
@@ -422,17 +459,19 @@ fn Pulse::stepSweep(self : Pulse) -> Unit {
   }
 }
 
+///|
 fn Pulse::stepLength(self : Pulse) -> Unit {
-  if self.lengthEnabled && self.lengthValue._ > 0 {
+  if self.lengthEnabled && self.lengthValue.inner() > 0 {
     self.lengthValue = self.lengthValue - (1 |> to_u8)
   }
 }
 
+///|
 fn Pulse::sweep(self : Pulse) -> Unit {
-  let delta = self.timerPeriod >> self.sweepShift._
+  let delta = self.timerPeriod >> self.sweepShift.inner()
   if self.sweepNegate {
     self.timerPeriod = self.timerPeriod - delta
-    if self.channel._ == 1 {
+    if self.channel.inner() == 1 {
       self.timerPeriod = self.timerPeriod - (1 |> to_u16)
     }
   } else {
@@ -440,17 +479,18 @@ fn Pulse::sweep(self : Pulse) -> Unit {
   }
 }
 
+///|
 fn Pulse::output(self : Pulse) -> UInt8 {
   if not(self.enabled) {
     return 0 |> to_u8
   }
-  if self.lengthValue._ == 0 {
+  if self.lengthValue.inner() == 0 {
     return 0 |> to_u8
   }
-  if dutyTable[self.dutyMode._][self.dutyValue._] == 0 {
+  if dutyTable[self.dutyMode.inner()][self.dutyValue.inner()] == 0 {
     return 0 |> to_u8
   }
-  if self.timerPeriod._ < 8 || self.timerPeriod._ > 0x7FF {
+  if self.timerPeriod.inner() < 8 || self.timerPeriod.inner() > 0x7FF {
     return 0 |> to_u8
   }
   // if !self.sweepNegate && self.timerPeriod+(self.timerPeriod>>self.sweepShift) > 0x7FF {
@@ -463,8 +503,7 @@ fn Pulse::output(self : Pulse) -> UInt8 {
   }
 }
 
-//////////////////////// Triangle
-
+///| Triangle
 struct Triangle {
   mut enabled : Bool
   mut lengthEnabled : Bool
@@ -477,6 +516,7 @@ struct Triangle {
   mut counterReload : Bool
 }
 
+///|
 fn Triangle::new() -> Triangle {
   {
     enabled: false,
@@ -491,47 +531,53 @@ fn Triangle::new() -> Triangle {
   }
 }
 
+///|
 fn Triangle::writeControl(self : Triangle, val : UInt8) -> Unit {
-  let value = val._
+  let value = val.inner()
   self.lengthEnabled = (((value & 0xFF) >> 7) & 1) == 0
-  self.counterPeriod = value & 0x7F |> to_u8
+  self.counterPeriod = (value & 0x7F) |> to_u8
 }
 
+///|
 fn Triangle::writeTimerLow(self : Triangle, val : UInt8) -> Unit {
-  let value = val._
+  let value = val.inner()
   self.timerPeriod = (self.timerPeriod & (0xFF00 |> to_u16)) | (value |> to_u16) // CHECKME
 }
 
+///|
 fn Triangle::writeTimerHigh(self : Triangle, val : UInt8) -> Unit {
-  let value = val._
+  let value = val.inner()
   self.lengthValue = lengthTable[(value & 0xFF) >> 3] |> to_u8
   self.timerPeriod = (self.timerPeriod & (0x00FF |> to_u16)) |
-    ((value & 7) << 8 |> to_u16) // CHECKME
+    (((value & 7) << 8) |> to_u16) // CHECKME
   self.timerValue = self.timerPeriod
   self.counterReload = true
 }
 
+///|
 fn Triangle::stepTimer(self : Triangle) -> Unit {
-  if self.timerValue._ == 0 {
+  if self.timerValue.inner() == 0 {
     self.timerValue = self.timerPeriod
-    if self.lengthValue._ > 0 && self.counterValue._ > 0 {
-      self.dutyValue = (self.dutyValue._ + 1) % 32 |> to_u8
+    if self.lengthValue.inner() > 0 && self.counterValue.inner() > 0 {
+      self.dutyValue = ((self.dutyValue.inner() + 1) % 32) |> to_u8
     }
   } else {
     self.timerValue = self.timerValue - (1 |> to_u16)
   }
 }
 
+///|
 fn Triangle::stepLength(self : Triangle) -> Unit {
-  if self.lengthEnabled && self.lengthValue._ > 0 {
+  if self.lengthEnabled && self.lengthValue.inner() > 0 {
     self.lengthValue = self.lengthValue - (1 |> to_u8)
   }
 }
 
+///|
 fn Triangle::stepCounter(self : Triangle) -> Unit {
   if self.counterReload {
     self.counterValue = self.counterPeriod
-  } else if self.counterValue._ > 0 {
+  } else if self.counterValue.inner() > 0 {
     self.counterValue = self.counterValue - (1 |> to_u8)
   }
   if self.lengthEnabled {
@@ -539,24 +585,24 @@ fn Triangle::stepCounter(self : Triangle) -> Unit {
   }
 }
 
+///|
 fn Triangle::output(self : Triangle) -> UInt8 {
   if not(self.enabled) {
     return 0 |> to_u8
   }
-  if self.timerPeriod._ < 3 {
+  if self.timerPeriod.inner() < 3 {
     return 0 |> to_u8
   }
-  if self.lengthValue._ == 0 {
+  if self.lengthValue.inner() == 0 {
     return 0 |> to_u8
   }
-  if self.counterValue._ == 0 {
+  if self.counterValue.inner() == 0 {
     return 0 |> to_u8
   }
-  return triangleTable[self.dutyValue._] |> to_u8
+  return triangleTable[self.dutyValue.inner()] |> to_u8
 }
 
-////////////////////////////////// Noise
-
+///| Noise
 struct Noise {
   mut enabled : Bool
   mut mode : Bool
@@ -574,6 +620,7 @@ struct Noise {
   mut constantVolume : UInt8
 }
 
+///|
 fn Noise::new() -> Noise {
   {
     enabled: false,
@@ -593,30 +640,34 @@ fn Noise::new() -> Noise {
   }
 }
 
+///|
 fn Noise::writeControl(self : Noise, val : UInt8) -> Unit {
-  let value = val._ & 0xFF
+  let value = val.inner() & 0xFF
   self.lengthEnabled = ((value >> 5) & 1) == 0
   self.envelopeLoop = ((value >> 5) & 1) == 1
   self.envelopeEnabled = ((value >> 4) & 1) == 0
-  self.envelopePeriod = value & 15 |> to_u8
-  self.constantVolume = value & 15 |> to_u8
+  self.envelopePeriod = (value & 15) |> to_u8
+  self.constantVolume = (value & 15) |> to_u8
   self.envelopeStart = true
 }
 
+///|
 fn Noise::writePeriod(self : Noise, val : UInt8) -> Unit {
-  let value = val._
+  let value = val.inner()
   self.mode = (value & 0x80) == 0x80
   self.timerPeriod = noiseTable[value & 0x0F] |> to_u16
 }
 
+///|
 fn Noise::writeLength(self : Noise, val : UInt8) -> Unit {
-  let value = val._ & 0xFF
+  let value = val.inner() & 0xFF
   self.lengthValue = lengthTable[value >> 3] |> to_u8
   self.envelopeStart = true
 }
 
+///|
 fn Noise::stepTimer(self : Noise) -> Unit {
-  if self.timerValue._ == 0 {
+  if self.timerValue.inner() == 0 {
     self.timerValue = self.timerPeriod
     let shift = if self.mode { 6 } else { 1 }
     let b1 = self.shiftRegister & (1 |> to_u16)
@@ -628,15 +679,16 @@ fn Noise::stepTimer(self : Noise) -> Unit {
   }
 }
 
+///|
 fn Noise::stepEnvelope(self : Noise) -> Unit {
   if self.envelopeStart {
     self.envelopeVolume = 15 |> to_u8
     self.envelopeValue = self.envelopePeriod
     self.envelopeStart = false
-  } else if self.envelopeValue._ > 0 {
+  } else if self.envelopeValue.inner() > 0 {
     self.envelopeValue = self.envelopeValue - (1 |> to_u8)
   } else {
-    if self.envelopeVolume._ > 0 {
+    if self.envelopeVolume.inner() > 0 {
       self.envelopeVolume = self.envelopeVolume - (1 |> to_u8)
     } else if self.envelopeLoop {
       self.envelopeVolume = 15 |> to_u8
@@ -645,20 +697,22 @@ fn Noise::stepEnvelope(self : Noise) -> Unit {
   }
 }
 
+///|
 fn Noise::stepLength(self : Noise) -> Unit {
-  if self.lengthEnabled && self.lengthValue._ > 0 {
+  if self.lengthEnabled && self.lengthValue.inner() > 0 {
     self.lengthValue = self.lengthValue - (1 |> to_u8)
   }
 }
 
+///|
 fn Noise::output(self : Noise) -> UInt8 {
   if not(self.enabled) {
     return 0 |> to_u8
   }
-  if self.lengthValue._ == 0 {
+  if self.lengthValue.inner() == 0 {
     return 0 |> to_u8
   }
-  if (self.shiftRegister._ & 1) == 1 {
+  if (self.shiftRegister.inner() & 1) == 1 {
     return 0 |> to_u8
   }
   if self.envelopeEnabled {
@@ -668,6 +722,7 @@ fn Noise::output(self : Noise) -> UInt8 {
   }
 }
 
+///|
 struct DMC {
   mut cpu : CPU? // sigh...
   mut enabled : Bool
@@ -684,6 +739,7 @@ struct DMC {
   mut irq : Bool
 }
 
+///|
 fn DMC::new() -> DMC {
   {
     cpu: None,
@@ -702,41 +758,47 @@ fn DMC::new() -> DMC {
   }
 }
 
+///|
 fn DMC::writeControl(self : DMC, val : UInt8) -> Unit {
-  let value = val._
+  let value = val.inner()
   self.irq = (value & 0x80) == 0x80
   self.loop_ = (value & 0x40) == 0x40
   self.tickPeriod = dmcTable[value & 0x0F] |> to_u8
 }
 
+///|
 fn DMC::writeValue(self : DMC, val : UInt8) -> Unit {
-  let value = val._
-  self.value = value & 0x7F |> to_u8
+  let value = val.inner()
+  self.value = (value & 0x7F) |> to_u8
 }
 
+///|
 fn DMC::writeAddress(self : DMC, val : UInt8) -> Unit {
-  let value = val._
+  let value = val.inner()
   // Sample address = %11AAAAAA.AA000000
   self.sampleAddress = (0xC000 |> to_u16) | ((value |> to_u16) << 6) // CHECKME
 }
 
+///|
 fn DMC::writeLength(self : DMC, val : UInt8) -> Unit {
-  let value = val._
+  let value = val.inner()
   // Sample length = %0000LLLL.LLLL0001
   self.sampleLength = ((value |> to_u16) << 4) | (1 |> to_u16) // CHECKME
 }
 
+///|
 fn DMC::restart(self : DMC) -> Unit {
   self.currentAddress = self.sampleAddress
   self.currentLength = self.sampleLength
 }
 
+///|
 fn DMC::stepTimer(self : DMC) -> Unit {
   if not(self.enabled) {
     return
   }
   self.stepReader()
-  if self.tickValue._ == 0 {
+  if self.tickValue.inner() == 0 {
     self.tickValue = self.tickPeriod
     self.stepShifter()
   } else {
@@ -744,42 +806,46 @@ fn DMC::stepTimer(self : DMC) -> Unit {
   }
 }
 
+///|
 fn DMC::stepReader(self : DMC) -> Unit {
   let cpu = self.cpu.unwrap()
-  if self.currentLength._ > 0 && self.bitCount._ == 0 {
+  if self.currentLength.inner() > 0 && self.bitCount.inner() == 0 {
     cpu.stall = cpu.stall + 4
     self.shiftRegister = cpu.mem[self.currentAddress]
     self.bitCount = 8 |> to_u8
     self.currentAddress = self.currentAddress + (1 |> to_u16)
-    if self.currentAddress._ == 0 {
+    if self.currentAddress.inner() == 0 {
       self.currentAddress = 0x8000 |> to_u16
     }
     self.currentLength = self.currentLength - (1 |> to_u16)
-    if self.currentLength._ == 0 && self.loop_ {
+    if self.currentLength.inner() == 0 && self.loop_ {
       self.restart()
     }
   }
 }
 
+///|
 fn DMC::stepShifter(self : DMC) -> Unit {
-  if self.bitCount._ == 0 {
+  if self.bitCount.inner() == 0 {
     return
   }
-  if (self.shiftRegister._ & 1) == 1 {
-    if self.value._ <= 125 {
+  if (self.shiftRegister.inner() & 1) == 1 {
+    if self.value.inner() <= 125 {
       self.value = self.value + (2 |> to_u8)
     }
-  } else if self.value._ >= 2 {
+  } else if self.value.inner() >= 2 {
     self.value = self.value - (2 |> to_u8)
   }
   self.shiftRegister = self.shiftRegister >> 1
   self.bitCount = self.bitCount - (1 |> to_u8)
 }
 
+///|
 fn DMC::output(self : DMC) -> UInt8 {
   return self.value
 }
 
+///|
 fn init {
   for i = 0; i < 31; i = i + 1 {
     pulseTable[i] = 95.52 / (8128.0 / i.to_double() + 100.0)
