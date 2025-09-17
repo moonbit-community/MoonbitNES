@@ -13,19 +13,19 @@ struct Cartridge {
 }
 
 ///|
-let mirrorHorizontal : UInt8 = 0 |> to_u8()
+let mirrorHorizontal : UInt8 = 0
 
 ///|
-let mirrorVertical : UInt8 = 1 |> to_u8()
+let mirrorVertical : UInt8 = 1
 
 ///|
-let mirrorSingle0 : UInt8 = 2 |> to_u8()
+let mirrorSingle0 : UInt8 = 2
 
 ///|
-let mirrorSingle1 : UInt8 = 3 |> to_u8()
+let mirrorSingle1 : UInt8 = 3
 
 ///|
-let mirrorFour : UInt8 = 4 |> to_u8()
+let mirrorFour : UInt8 = 4
 
 ///|
 let iNESMagic = 0x1A53454E
@@ -91,8 +91,8 @@ fn newCartridge(data : FixedArray[Int]) -> Cartridge {
   println("mapper: \{mapper})")
 
   // mirroring type
-  let mirror1 = header.control1 & (1 |> to_u8)
-  let mirror2 = (header.control1 >> 3) & (1 |> to_u8)
+  let mirror1 = header.control1 & 1
+  let mirror2 = (header.control1 >> 3) & 1
   let mirror = mirror1 | (mirror2 << 1)
   let battery = (
       (
@@ -100,14 +100,14 @@ fn newCartridge(data : FixedArray[Int]) -> Cartridge {
       // battery-backed RAM
         header.control1 >> 1
       ) &
-      (1 |> to_u8)
+      1
     ) !=
-    (0 |> to_u8)
+    0
   let prg_len = header.numPRG.to_int() * 16384
   let chr_len = header.numCHR.to_int() * 8192
 
   // read trainer if present (unused)
-  if (header.control1 & (4 |> to_u8)) == (4 |> to_u8) {
+  if (header.control1 & 4) == 4 {
     // read trainer. It's not used, but must read it
     let _ = reader.readUInt8Array(512)
     println("has trainer")
@@ -119,12 +119,12 @@ fn newCartridge(data : FixedArray[Int]) -> Cartridge {
 
   // read chr-rom bank(s)
   // provide chr-rom/ram if not in file
-  let chr = if header.numCHR == (0 |> to_u8) {
-    FixedArray::make(8192, 0 |> to_u8)
+  let chr : FixedArray[UInt8] = if header.numCHR == 0 {
+    FixedArray::make(8192, 0)
   } else {
     println("read \{chr_len} bytes of chr-rom")
     reader.readUInt8Array(chr_len)
   }
-  let sram = FixedArray::make(0x2000, 0 |> to_u8)
+  let sram : FixedArray[UInt8] = FixedArray::make(0x2000, 0)
   { prg, chr, sram, mapper, mirror, battery }
 }

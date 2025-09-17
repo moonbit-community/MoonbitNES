@@ -126,8 +126,8 @@ fn CPUMemory::op_get(self : CPUMemory, adr : UInt16) -> UInt8 {
   let n = self.nes.unwrap()
   if adr.to_int() >= 0x0000 && adr.to_int() <= 0x1FFF {
     n.ram[adr.to_int() % 0x0800]
-  } else if adr >= (0x2000 |> to_u16) && adr <= (0x3FFF |> to_u16) {
-    n.ppu.readRegister((0x2000 |> to_u16) + ((adr.to_int() % 8) |> to_u16))
+  } else if adr >= (0x2000) && adr <= (0x3FFF) {
+    n.ppu.readRegister((0x2000) + ((adr.to_int() % 8) |> to_u16))
   } else if adr.to_int() == 0x4014 {
     n.ppu.readRegister(adr)
   } else if adr.to_int() == 0x4015 {
@@ -140,7 +140,7 @@ fn CPUMemory::op_get(self : CPUMemory, adr : UInt16) -> UInt8 {
     let m = n.mapper.unwrap()
     m[adr]
   } else {
-    0 |> to_u8()
+    0
   }
 }
 
@@ -154,7 +154,7 @@ fn CPUMemory::op_set(self : CPUMemory, adr : UInt16, val : UInt8) -> Unit {
     n.ram[adr.to_int() % 0x0800] = val
   } else if adr.to_int() >= 0x2000 && adr.to_int() <= 0x3FFF {
     n.ppu.writeRegister(
-      (0x2000 |> to_u16) + ((adr.to_int() % 8) |> to_u16),
+      (0x2000) + ((adr.to_int() % 8) |> to_u16),
       val,
     )
   } else if adr.to_int() == 0x4014 {
@@ -175,7 +175,7 @@ fn CPUMemory::op_set(self : CPUMemory, adr : UInt16, val : UInt8) -> Unit {
 ///|
 fn CPUMemory::read16(self : CPUMemory, adr : UInt16) -> UInt16 {
   let lo = self[adr] |> to_u16
-  let hi = self[adr + (1 |> to_u16)] |> to_u16
+  let hi = self[adr + 1] |> to_u16
   (hi << 8) | lo
 }
 
@@ -183,8 +183,7 @@ fn CPUMemory::read16(self : CPUMemory, adr : UInt16) -> UInt16 {
 fn CPUMemory::read16bug(self : CPUMemory, adr : UInt16) -> UInt16 {
   // Low byte wraps without incrementing high byte
   let a = adr
-  let b = (a & (0xFF00 |> to_u16)) |
-    (((adr |> to_u8()) + (1 |> to_u8())) |> to_u16)
+  let b = (a & (0xFF00)) | (((adr |> to_u8()) + 1) |> to_u16)
   let lo = self[a]
   let hi = self[b]
   ((hi |> to_u16) << 8) | (lo |> to_u16)
@@ -192,14 +191,14 @@ fn CPUMemory::read16bug(self : CPUMemory, adr : UInt16) -> UInt16 {
 
 ///|
 fn CPU::push(self : CPU, val : UInt8) -> Unit {
-  self.mem[(self.sp |> to_u16) | (0x100 |> to_u16)] = val
-  self.sp = self.sp - (1 |> to_u8())
+  self.mem[(self.sp |> to_u16) | (0x100)] = val
+  self.sp = self.sp - 1
 }
 
 ///|
 fn CPU::pull(self : CPU) -> UInt8 {
-  self.sp = self.sp + (1 |> to_u8())
-  self.mem[(self.sp |> to_u16) | (0x100 |> to_u16)]
+  self.sp = self.sp + 1
+  self.mem[(self.sp |> to_u16) | (0x100)]
 }
 
 ///|
@@ -217,12 +216,12 @@ fn CPU::pull16(self : CPU) -> UInt16 {
 
 ///|
 fn CPU::setZ(self : CPU, val : UInt8) -> Unit {
-  self.z = val == (0 |> to_u8())
+  self.z = val == 0
 }
 
 ///|
 fn CPU::setN(self : CPU, val : UInt8) -> Unit {
-  self.n = (val & (0x80 |> to_u8())) != (0 |> to_u8())
+  self.n = (val & (0x80)) != 0
 }
 
 ///|
@@ -265,9 +264,9 @@ fn CPU::triggerIRQ(self : CPU) -> Unit {
 ///|
 fn CPU::reset(self : CPU) -> Unit {
   self.cycles = 0L
-  self.pc = self.mem.read16(0xFFFC |> to_u16)
-  self.sp = 0xFD |> to_u8()
-  self.set_flags(0x24 |> to_u8())
+  self.pc = self.mem.read16(0xFFFC)
+  self.sp = 0xFD
+  self.set_flags(0x24)
   // ???
   //self.sp = (0xFC) |> to_u8()
   //self.set_flags((0x04) |> to_u8())
@@ -291,7 +290,7 @@ fn CPU::formatAssemblySuffix(self : CPU) -> String {
   //log_string("opcode addressing mode: \(modei)")
 
   let mem_addr = self.get_addr(mode)
-  let mut stored_value = 0 |> to_u8()
+  let mut stored_value : UInt8 = 0
   if mode.is_addressed() {
     stored_value = self.mem[mem_addr]
   }
@@ -307,7 +306,7 @@ fn CPU::formatAssemblySuffix(self : CPU) -> String {
         _ => ""
       }
     2 => {
-      let address = self.mem[self.pc + (1 |> to_u16)]
+      let address = self.mem[self.pc + 1]
       let address_hex = address.to_hex()
       match mode {
         Immediate => "#$\{address_hex}"
@@ -338,7 +337,7 @@ fn CPU::formatAssemblySuffix(self : CPU) -> String {
       // let address_lo = cpu.mem_read(begin + 1);
       // let address_hi = cpu.mem_read(begin + 2);
 
-      let address = self.mem.read16(self.pc + (1 |> to_u16))
+      let address = self.mem.read16(self.pc + 1)
       let address_hex = address.to_hex()
       match mode {
         Indirect => "($\{address_hex}) = \{mem_addr_hex}"
@@ -396,9 +395,9 @@ fn CPU::formatInstruction(self : CPU) -> String {
   let opcode = self.mem[self.pc]
   let bytes = instructionSizes[opcode.to_int()]
   let name = instructionNames[opcode.to_int()]
-  let w0 = self.mem[self.pc + (0 |> to_u16)].to_hex()
-  let mut w1 = self.mem[self.pc + (1 |> to_u16)].to_hex()
-  let mut w2 = self.mem[self.pc + (2 |> to_u16)].to_hex()
+  let w0 = self.mem[self.pc + 0].to_hex()
+  let mut w1 = self.mem[self.pc + 1].to_hex()
+  let mut w2 = self.mem[self.pc + 2].to_hex()
   if bytes < 2 {
     w1 = "  "
   }
@@ -427,9 +426,9 @@ fn CPU::formatInstructionWithMesen2Extended(self : CPU) -> String {
   let opcode = self.mem[self.pc]
   let bytes = instructionSizes[opcode.to_int()]
   let name = instructionNames[opcode.to_int()]
-  let w0 = self.mem[self.pc + (0 |> to_u16)].to_hex()
-  let mut w1 = self.mem[self.pc + (1 |> to_u16)].to_hex()
-  let mut w2 = self.mem[self.pc + (2 |> to_u16)].to_hex()
+  let w0 = self.mem[self.pc + 0].to_hex()
+  let mut w1 = self.mem[self.pc + 1].to_hex()
+  let mut w2 = self.mem[self.pc + 2].to_hex()
   if bytes < 2 {
     w1 = "  "
   }
@@ -466,11 +465,11 @@ fn initCPU() -> CPU {
   let result : CPU = {
     mem,
     cycles: 0L,
-    pc: 0 |> to_u16,
-    sp: 0 |> to_u8(),
-    a: 0 |> to_u8(),
-    x: 0 |> to_u8(),
-    y: 0 |> to_u8(),
+    pc: 0,
+    sp: 0,
+    a: 0,
+    x: 0,
+    y: 0,
     c: false,
     z: false,
     i: false,
@@ -491,7 +490,7 @@ fn initCPU() -> CPU {
 
 ///|
 fn pagesDiffer(a : UInt16, b : UInt16) -> Bool {
-  (a & (0xFF00 |> to_u16)) != (b & (0xFF00 |> to_u16))
+  (a & (0xFF00)) != (b & (0xFF00))
 }
 
 // branch, then adds a cycle for taking a branch and adds another cycle
@@ -525,8 +524,8 @@ fn CPU::opADC(self : CPU, info : StepInfo) -> Unit {
   self.setZN(self.a)
   self.c = a.to_int() + b.to_int() + c.to_int() > 0xFF
   // (a^b)&0x80 == 0 && (a^self.a)&0x80 != 0
-  self.v = ((a ^ b) & (0x80 |> to_u8())) == (0 |> to_u8()) &&
-    ((a ^ self.a) & (0x80 |> to_u8())) != (0 |> to_u8())
+  self.v = ((a ^ b) & (0x80)) == 0 &&
+    ((a ^ self.a) & (0x80)) != 0
 }
 
 // AND - Logical and
@@ -544,13 +543,13 @@ fn CPU::opAND(self : CPU, info : StepInfo) -> Unit {
 fn CPU::opASL(self : CPU, info : StepInfo) -> Unit {
   match info.mode {
     Accumulator => {
-      self.c = ((self.a >> 7) & (1 |> to_u8())) != (0 |> to_u8()) // (self.a >> 7) & 1
+      self.c = ((self.a >> 7) & 1) != 0 // (self.a >> 7) & 1
       self.a = self.a << 1
       self.setZN(self.a)
     }
     _ => {
       let mut val = self.mem[info.address]
-      self.c = ((val >> 7) & (1 |> to_u8())) != (0 |> to_u8()) // (val >> 7) & 1
+      self.c = ((val >> 7) & 1) != 0 // (val >> 7) & 1
       val = val << 1
       self.mem[info.address] = val
       self.setZN(val)
@@ -590,7 +589,7 @@ fn CPU::opBEQ(self : CPU, info : StepInfo) -> Unit {
 ///|
 fn CPU::opBIT(self : CPU, info : StepInfo) -> Unit {
   let val = self.mem[info.address] // :- same as go!
-  self.v = ((val >> 6) & (1 |> to_u8())) != (0 |> to_u8()) // (val >> 6) & 1
+  self.v = ((val >> 6) & 1) != 0 // (val >> 6) & 1
   self.setZ(val & self.a) // val & self.A
   self.setN(val)
 }
@@ -629,7 +628,7 @@ fn CPU::opBRK(self : CPU, info : StepInfo) -> Unit {
   self.push16(self.pc)
   self.opPHP(info)
   self.opSEI(info)
-  self.pc = self.mem.read16(0xFFFE |> to_u16)
+  self.pc = self.mem.read16(0xFFFE)
 }
 
 // BVC - Branch if overflow clear
@@ -704,7 +703,7 @@ fn CPU::opCPY(self : CPU, info : StepInfo) -> Unit {
 
 ///|
 fn CPU::opDEC(self : CPU, info : StepInfo) -> Unit {
-  let val = self.mem[info.address] - (1 |> to_u8())
+  let val = self.mem[info.address] - 1
   self.mem[info.address] = val
   self.setZN(val)
 }
@@ -713,7 +712,7 @@ fn CPU::opDEC(self : CPU, info : StepInfo) -> Unit {
 
 ///|
 fn CPU::opDEX(self : CPU, _info : StepInfo) -> Unit {
-  self.x = self.x - (1 |> to_u8()) // self.x--
+  self.x = self.x - 1 // self.x--
   self.setZN(self.x)
 }
 
@@ -721,7 +720,7 @@ fn CPU::opDEX(self : CPU, _info : StepInfo) -> Unit {
 
 ///|
 fn CPU::opDEY(self : CPU, _info : StepInfo) -> Unit {
-  self.y = self.y - (1 |> to_u8()) // self.y--
+  self.y = self.y - 1 // self.y--
   self.setZN(self.y)
 }
 
@@ -738,7 +737,7 @@ fn CPU::opEOR(self : CPU, info : StepInfo) -> Unit {
 
 ///|
 fn CPU::opINC(self : CPU, info : StepInfo) -> Unit {
-  let val = self.mem[info.address] + (1 |> to_u8())
+  let val = self.mem[info.address] + 1
   self.mem[info.address] = val
   self.setZN(val)
 }
@@ -747,7 +746,7 @@ fn CPU::opINC(self : CPU, info : StepInfo) -> Unit {
 
 ///|
 fn CPU::opINX(self : CPU, _info : StepInfo) -> Unit {
-  self.x = self.x + (1 |> to_u8()) //self.x++
+  self.x = self.x + 1 //self.x++
   self.setZN(self.x)
 }
 
@@ -755,7 +754,7 @@ fn CPU::opINX(self : CPU, _info : StepInfo) -> Unit {
 
 ///|
 fn CPU::opINY(self : CPU, _info : StepInfo) -> Unit {
-  self.y = self.y + (1 |> to_u8()) // self.y++
+  self.y = self.y + 1 // self.y++
   self.setZN(self.y)
 }
 
@@ -772,7 +771,7 @@ fn CPU::opJMP(self : CPU, info : StepInfo) -> Unit {
 
 ///|
 fn CPU::opJSR(self : CPU, info : StepInfo) -> Unit {
-  self.push16(self.pc - (1 |> to_u16))
+  self.push16(self.pc - 1)
   self.pc = info.address
 }
 
@@ -806,13 +805,13 @@ fn CPU::opLDY(self : CPU, info : StepInfo) -> Unit {
 fn CPU::opLSR(self : CPU, info : StepInfo) -> Unit {
   match info.mode {
     Accumulator => {
-      self.c = (self.a & (1 |> to_u8())) != (0 |> to_u8()) // self.A & 1
+      self.c = (self.a & 1) != 0 // self.A & 1
       self.a = self.a >> 1 // self.A >>= 1
       self.setZN(self.a)
     }
     _ => {
       let mut val = self.mem[info.address]
-      self.c = (val & (1 |> to_u8())) != (0 |> to_u8()) // value & 1
+      self.c = (val & 1) != 0 // value & 1
       val = val >> 1 // val >>= 1
       self.mem[info.address] = val
       self.setZN(val)
@@ -846,7 +845,7 @@ fn CPU::opPHA(self : CPU, _info : StepInfo) -> Unit {
 
 ///|
 fn CPU::opPHP(self : CPU, _info : StepInfo) -> Unit {
-  self.push(self.flags() | (0x10 |> to_u8()))
+  self.push(self.flags() | (0x10))
 }
 
 // PLA - Pull accumulator
@@ -861,7 +860,7 @@ fn CPU::opPLA(self : CPU, _info : StepInfo) -> Unit {
 
 ///|
 fn CPU::opPLP(self : CPU, _info : StepInfo) -> Unit {
-  self.set_flags((self.pull() & (0xEF |> to_u8())) | (0x20 |> to_u8())) // pull() & 0xEF | 0x20
+  self.set_flags((self.pull() & (0xEF)) | (0x20)) // pull() & 0xEF | 0x20
 }
 
 // ROL - Rotate left
@@ -871,13 +870,13 @@ fn CPU::opROL(self : CPU, info : StepInfo) -> Unit {
   let c = self.c |> to_u8()
   match info.mode {
     Accumulator => {
-      self.c = ((self.a >> 7) & (1 |> to_u8())) != (0 |> to_u8()) // (self.A >> 7) & 1
+      self.c = ((self.a >> 7) & 1) != 0 // (self.A >> 7) & 1
       self.a = (self.a << 1) | c // (self.A << 1) | c
       self.setZN(self.a)
     }
     _ => {
       let mut val = self.mem[info.address]
-      self.c = ((val >> 7) & (1 |> to_u8())) != (0 |> to_u8()) // (val >> 7) & 1
+      self.c = ((val >> 7) & 1) != 0 // (val >> 7) & 1
       val = (val << 1) | c // (val << 1) | c
       self.mem[info.address] = val
       self.setZN(val)
@@ -892,13 +891,13 @@ fn CPU::opROR(self : CPU, info : StepInfo) -> Unit {
   let c = self.c |> to_u8()
   match info.mode {
     Accumulator => {
-      self.c = (self.a & (1 |> to_u8())) != (0 |> to_u8()) // self.A & 1
+      self.c = (self.a & 1) != 0 // self.A & 1
       self.a = (self.a >> 1) | (c << 7) // (self.A >> 1) | (c << 7)
       self.setZN(self.a)
     }
     _ => {
       let mut val = self.mem[info.address]
-      self.c = (val & (1 |> to_u8())) != (0 |> to_u8()) // val & 1
+      self.c = (val & 1) != 0 // val & 1
       val = (val >> 1) | (c << 7) // (val >> 1) | (c << 7)
       self.mem[info.address] = val
       self.setZN(val)
@@ -910,7 +909,7 @@ fn CPU::opROR(self : CPU, info : StepInfo) -> Unit {
 
 ///|
 fn CPU::opRTI(self : CPU, info : StepInfo) -> Unit {
-  self.set_flags((self.pull() & (0xEF |> to_u8())) | (0x20 |> to_u8())) // pull() & 0xEF | 0x20
+  self.set_flags((self.pull() & (0xEF)) | (0x20)) // pull() & 0xEF | 0x20
   self.pc = self.pull16()
 }
 
@@ -918,7 +917,7 @@ fn CPU::opRTI(self : CPU, info : StepInfo) -> Unit {
 
 ///|
 fn CPU::opRTS(self : CPU, info : StepInfo) -> Unit {
-  self.pc = self.pull16() + (1 |> to_u16)
+  self.pc = self.pull16() + 1
 }
 
 // SBC - Subtract with carry
@@ -928,11 +927,11 @@ fn CPU::opSBC(self : CPU, info : StepInfo) -> Unit {
   let a = self.a
   let b = self.mem[info.address]
   let c = self.c |> to_u8()
-  self.a = a - b - ((1 |> to_u8()) - c)
+  self.a = a - b - (1 - c)
   self.setZN(self.a)
-  self.c = a.to_int() - b.to_int() - ((1 |> to_u8()) - c).to_int() >= 0
-  self.v = ((a ^ b) & (0x80 |> to_u8())) != (0 |> to_u8()) &&
-    ((a ^ self.a) & (0x80 |> to_u8())) != (0 |> to_u8())
+  self.c = a.to_int() - b.to_int() - ((1 : UInt8) - c).to_int() >= 0
+  self.v = ((a ^ b) & (0x80)) != 0 &&
+    ((a ^ self.a) & (0x80)) != 0
 }
 
 // SEC - Set carry flag
@@ -1531,7 +1530,7 @@ let instructionUnofficial : FixedArray[Int] = [ // 1 if official
 fn CPU::nmi(self : CPU) -> Unit {
   self.push16(self.pc)
   self.opPHP(StepInfo::default())
-  self.pc = self.mem.read16(0xFFFA |> to_u16)
+  self.pc = self.mem.read16(0xFFFA)
   self.i = true
   self.cycles += 7L
 }
@@ -1542,7 +1541,7 @@ fn CPU::nmi(self : CPU) -> Unit {
 fn CPU::irq(self : CPU) -> Unit {
   self.push16(self.pc)
   self.opPHP(StepInfo::default())
-  self.pc = self.mem.read16(0xFFFE |> to_u16)
+  self.pc = self.mem.read16(0xFFFE)
   self.i = true
   self.cycles += 7L
 }
@@ -1558,26 +1557,25 @@ fn AddressingMode::is_addressed(self : AddressingMode) -> Bool {
 ///|
 fn CPU::get_addr(self : CPU, mode : AddressingMode) -> UInt16 {
   match mode {
-    Absolute => self.mem.read16(self.pc + (1 |> to_u16))
-    AbsoluteX => self.mem.read16(self.pc + (1 |> to_u16)) + (self.x |> to_u16)
-    AbsoluteY => self.mem.read16(self.pc + (1 |> to_u16)) + (self.y |> to_u16)
+    Absolute => self.mem.read16(self.pc + 1)
+    AbsoluteX => self.mem.read16(self.pc + 1) + (self.x |> to_u16)
+    AbsoluteY => self.mem.read16(self.pc + 1) + (self.y |> to_u16)
     IndexedIndirect =>
-      self.mem.read16bug((self.mem[self.pc + (1 |> to_u16)] + self.x) |> to_u16)
-    Indirect => self.mem.read16bug(self.mem.read16(self.pc + (1 |> to_u16)))
+      self.mem.read16bug((self.mem[self.pc + 1] + self.x) |> to_u16)
+    Indirect => self.mem.read16bug(self.mem.read16(self.pc + 1))
     IndirectIndexed =>
-      self.mem.read16bug(self.mem[self.pc + (1 |> to_u16)] |> to_u16) +
-      (self.y |> to_u16)
-    ZeroPage => self.mem[self.pc + (1 |> to_u16)] |> to_u16
-    ZeroPageX => (self.mem[self.pc + (1 |> to_u16)] + self.x) |> to_u16 // CHECKME
-    ZeroPageY => (self.mem[self.pc + (1 |> to_u16)] + self.y) |> to_u16
-    Immediate => self.pc + (1 |> to_u16)
-    Accumulator | Implied => 0 |> to_u16
+      self.mem.read16bug(self.mem[self.pc + 1] |> to_u16) + (self.y |> to_u16)
+    ZeroPage => self.mem[self.pc + 1] |> to_u16
+    ZeroPageX => (self.mem[self.pc + 1] + self.x) |> to_u16 // CHECKME
+    ZeroPageY => (self.mem[self.pc + 1] + self.y) |> to_u16
+    Immediate => self.pc + 1
+    Accumulator | Implied => 0
     Relative => {
-      let offset = self.mem[self.pc + (1 |> to_u16)] |> to_u16
-      if offset < (0x80 |> to_u16) {
-        self.pc + (2 |> to_u16) + offset
+      let offset = self.mem[self.pc + 1] |> to_u16
+      if offset < (0x80) {
+        self.pc + 2 + offset
       } else {
-        self.pc + (2 |> to_u16) + offset - (0x100 |> to_u16)
+        self.pc + 2 + offset - (0x100)
       }
     }
   }

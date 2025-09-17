@@ -38,7 +38,7 @@ pub fn nestest(rom : FixedArray[Int]) -> Unit {
   nes.reset()
   //log_string("Next instructions:")
   //log_string(nes.cpu.formatMemoryDump(nesConsole.cpu.pc, 8))
-  nes.cpu.pc = 0xC000 |> to_u16 // nestest automated test address
+  nes.cpu.pc = 0xC000 // nestest automated test address
   nes.cpu.interrupt = None // clear interrupt before auto test
   nes.ppu.scanLine = 0
   nes.ppu.cycle = 21

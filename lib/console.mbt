@@ -24,7 +24,7 @@ fn NES::new(data : FixedArray[Int]) -> NES {
     cartridge: newCartridge(data),
     controllers,
     mapper: None,
-    ram: FixedArray::make(2048, 0 |> to_u8),
+    ram: FixedArray::make(2048, 0),
     step_cnt: 0,
   }
   nes.mapper = Some(Mapper::new(nes))
