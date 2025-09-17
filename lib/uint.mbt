@@ -230,7 +230,7 @@ fn UInt8::bit(self : UInt8, bit : Int) -> Bool {
 ///|
 fn to_hex_digit(i : Int) -> String {
   let s = "0123456789ABCDEF"
-  s[i].to_string()
+  s[i].unsafe_to_char().to_string()
 }
 
 ///|
