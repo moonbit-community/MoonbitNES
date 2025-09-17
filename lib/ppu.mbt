@@ -87,7 +87,7 @@ struct PPU {
 }
 
 ///|
-type Color Int // 0xrrggbb
+struct Color(Int) // 0xrrggbb
 
 // type alias will be better
 

@@ -33,7 +33,7 @@ let iNESMagic = 0x1A53454E
 // I don't want to capitalize but the format is called `iNES`
 
 ///|
-struct iNESHeader {
+struct INESHeader {
   magic : Int // iNES magic number
   numPRG : UInt8 // number of PRG-ROM banks (16KB each)
   numCHR : UInt8 // number of CHR-ROM banks (8KB each)
@@ -44,7 +44,7 @@ struct iNESHeader {
 }
 
 ///|
-fn MemoryReader::readiNESHeader(self : MemoryReader) -> iNESHeader {
+fn MemoryReader::readINESHeader(self : MemoryReader) -> INESHeader {
   let magic = self.readIntLE()
   println("magic: \{magic})")
   let numPRG = self.readUInt8()
@@ -78,7 +78,7 @@ fn MemoryReader::readiNESHeader(self : MemoryReader) -> iNESHeader {
 ///|
 fn newCartridge(data : FixedArray[Int]) -> Cartridge {
   let reader = MemoryReader::new(data)
-  let header = reader.readiNESHeader()
+  let header = reader.readINESHeader()
   if header.magic != iNESMagic {
     abort("header not conforming to iNES format")
   }

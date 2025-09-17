@@ -5,13 +5,13 @@
 // try to get some type safety by wrapper UInt8 and UInt16
 
 ///|
-type UInt8 Int derive(Eq, Compare)
+struct UInt8(Int) derive(Eq, Compare)
 
 ///|
-type UInt16 Int derive(Eq, Compare, Default)
+struct UInt16(Int) derive(Eq, Compare, Default)
 
 ///|
-type UInt32 Int
+struct UInt32(Int)
 
 ///|
 trait U8 {
@@ -86,27 +86,27 @@ impl Show for UInt16 with output(self, logger) -> Unit {
 // TODO: test u8 arithmetic
 
 ///|
-impl Add for UInt8 with op_add(self : UInt8, rhs : UInt8) -> UInt8 {
+impl Add for UInt8 with add(self : UInt8, rhs : UInt8) -> UInt8 {
   (self.inner() + rhs.inner()) |> to_u8
 }
 
 ///|
-impl Sub for UInt8 with op_sub(self : UInt8, rhs : UInt8) -> UInt8 {
+impl Sub for UInt8 with sub(self : UInt8, rhs : UInt8) -> UInt8 {
   (self.inner() - rhs.inner()) |> to_u8
 }
 
 ///|
-impl Add for UInt16 with op_add(self : UInt16, rhs : UInt16) -> UInt16 {
+impl Add for UInt16 with add(self : UInt16, rhs : UInt16) -> UInt16 {
   (self.inner() + rhs.inner()) |> to_u16
 }
 
 ///|
-impl Sub for UInt16 with op_sub(self : UInt16, rhs : UInt16) -> UInt16 {
+impl Sub for UInt16 with sub(self : UInt16, rhs : UInt16) -> UInt16 {
   (self.inner() - rhs.inner()) |> to_u16
 }
 
 ///|
-impl Mod for UInt16 with op_mod(self : UInt16, rhs : UInt16) -> UInt16 {
+impl Mod for UInt16 with mod(self : UInt16, rhs : UInt16) -> UInt16 {
   (self.inner() % rhs.inner()) |> to_u16
 }
 
@@ -159,31 +159,31 @@ impl U64 for UInt8 with u64(self : UInt8) -> UInt64 {
 // `bit` is usually a constant, so `Int` is easier to use
 
 ///|
-impl Shl for UInt8 with op_shl(self : UInt8, bit : Int) -> UInt8 {
+impl Shl for UInt8 with shl(self : UInt8, bit : Int) -> UInt8 {
   (self.inner() << bit) |> to_u8
 }
 
 ///|
-impl Shl for UInt16 with op_shl(self : UInt16, bit : Int) -> UInt16 {
+impl Shl for UInt16 with shl(self : UInt16, bit : Int) -> UInt16 {
   (self.inner() << bit) |> to_u16
 }
 
 ///|
-impl Shr for UInt8 with op_shr(self : UInt8, bit : Int) -> UInt8 {
+impl Shr for UInt8 with shr(self : UInt8, bit : Int) -> UInt8 {
   (self.inner().reinterpret_as_uint() >> bit)
   |> UInt::reinterpret_as_int
   |> to_u8
 }
 
 ///|
-impl Shr for UInt16 with op_shr(self : UInt16, bit : Int) -> UInt16 {
+impl Shr for UInt16 with shr(self : UInt16, bit : Int) -> UInt16 {
   (self.inner().reinterpret_as_uint() >> bit)
   |> UInt::reinterpret_as_int
   |> to_u16
 }
 
 ///|
-impl Shr for UInt32 with op_shr(self : UInt32, bit : Int) -> UInt32 {
+impl Shr for UInt32 with shr(self : UInt32, bit : Int) -> UInt32 {
   (self.inner() >> bit) |> to_u32
 }
 
@@ -230,7 +230,7 @@ fn UInt8::bit(self : UInt8, bit : Int) -> Bool {
 ///|
 fn to_hex_digit(i : Int) -> String {
   let s = "0123456789ABCDEF"
-  s.char_at(i).to_string()
+  s[i].to_string()
 }
 
 ///|
@@ -254,7 +254,7 @@ fn to_byte(
   b4 : Bool,
   b5 : Bool,
   b6 : Bool,
-  b7 : Bool
+  b7 : Bool,
 ) -> UInt8 {
   (b0 |> to_u8) |
   ((b1 |> to_u8) << 1) |
@@ -275,7 +275,7 @@ fn MemoryReader::readUInt8(self : MemoryReader) -> UInt8 {
 ///|
 fn MemoryReader::readUInt8Array(
   self : MemoryReader,
-  cnt : Int
+  cnt : Int,
 ) -> FixedArray[UInt8] {
   let result = FixedArray::makei(cnt, index => self.data[self.pos + index]
     |> to_u8)
