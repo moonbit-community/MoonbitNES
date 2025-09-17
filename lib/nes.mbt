@@ -3,6 +3,7 @@
 // Copyright (c) 2024 Liu Rujia, International Digital Economy Academy
 
 // Main Loop
+
 ///|
 struct GlobalState {
   mut nes : NES?

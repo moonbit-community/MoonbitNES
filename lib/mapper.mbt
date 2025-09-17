@@ -98,14 +98,14 @@ impl IMapper for Mapper2 with step(self : Mapper2) -> Unit {
 ///|
 impl IMapper for Mapper2 with idx(self : Mapper2, adr : UInt16) -> UInt8 {
   if adr >= (0x0000 |> to_u16) && adr <= (0x1FFF |> to_u16) {
-    return self.cartridge.chr[adr.inner()]
+    return self.cartridge.chr[adr.to_int()]
   } else if adr >= (0x6000 |> to_u16) && adr <= (0x7FFF |> to_u16) {
-    return self.cartridge.sram[adr.inner() - 0x6000]
+    return self.cartridge.sram[adr.to_int() - 0x6000]
   } else if adr >= (0x8000 |> to_u16) && adr <= (0xBFFF |> to_u16) {
-    let offset = self.prgBank1 * 0x4000 + (adr.inner() - 0x8000)
+    let offset = self.prgBank1 * 0x4000 + (adr.to_int() - 0x8000)
     return self.cartridge.prg[offset]
   } else if adr >= (0xC000 |> to_u16) && adr <= (0xFFFF |> to_u16) {
-    let offset = self.prgBank2 * 0x4000 + (adr.inner() - 0xC000)
+    let offset = self.prgBank2 * 0x4000 + (adr.to_int() - 0xC000)
     return self.cartridge.prg[offset]
   } else {
     0 |> to_u8
@@ -115,11 +115,11 @@ impl IMapper for Mapper2 with idx(self : Mapper2, adr : UInt16) -> UInt8 {
 ///|
 impl IMapper for Mapper2 with idxSet(self : Mapper2, adr : UInt16, val : UInt8) -> Unit {
   if adr >= (0x0000 |> to_u16) && adr <= (0x1FFF |> to_u16) {
-    self.cartridge.chr[adr.inner()] = val // "but most emulators support RAM"
+    self.cartridge.chr[adr.to_int()] = val // "but most emulators support RAM"
   } else if adr >= (0x6000 |> to_u16) && adr <= (0x7FFF |> to_u16) {
-    self.cartridge.sram[adr.inner() - 0x6000] = val
+    self.cartridge.sram[adr.to_int() - 0x6000] = val
   } else if adr >= (0x8000 |> to_u16) {
-    self.prgBank1 = val.inner() % self.prgBanks
+    self.prgBank1 = val.to_int() % self.prgBanks
   }
 }
 
@@ -176,7 +176,7 @@ impl IMapper for Mapper1 with step(self : Mapper1) -> Unit {
 
 ///|
 impl IMapper for Mapper1 with idx(self : Mapper1, adr : UInt16) -> UInt8 {
-  let mut address = adr.inner()
+  let mut address = adr.to_int()
   if address < 0x2000 {
     let bank = address / 0x1000
     let offset = address % 0x1000
@@ -195,7 +195,7 @@ impl IMapper for Mapper1 with idx(self : Mapper1, adr : UInt16) -> UInt8 {
 
 ///|
 impl IMapper for Mapper1 with idxSet(self : Mapper1, adr : UInt16, val : UInt8) -> Unit {
-  let address = adr.inner()
+  let address = adr.to_int()
   if address < 0x2000 {
     let bank = address / 0x1000
     let offset = address % 0x1000
@@ -227,7 +227,7 @@ fn Mapper1::loadRegister(self : Mapper1, adr : UInt16, value : UInt8) -> Unit {
 
 ///|
 fn Mapper1::writeRegister(self : Mapper1, adr : UInt16, value : UInt8) -> Unit {
-  let address = adr.inner()
+  let address = adr.to_int()
   if address <= 0x9FFF {
     self.writeControl(value)
   } else if address <= 0xBFFF {
@@ -247,7 +247,7 @@ fn Mapper1::writeControl(self : Mapper1, value : UInt8) -> Unit {
   self.chrMode = (value >> 4) & (1 |> to_u8)
   self.prgMode = (value >> 2) & (3 |> to_u8)
   let mirror = value & (3 |> to_u8)
-  match mirror.inner() {
+  match mirror.to_int() {
     0 => self.cartridge.mirror = mirrorSingle0
     1 => self.cartridge.mirror = mirrorSingle1
     2 => self.cartridge.mirror = mirrorVertical
@@ -311,28 +311,28 @@ fn Mapper1::chrBankOffset(self : Mapper1, index : Int) -> Int {
 
 ///|
 fn Mapper1::updateOffsets(self : Mapper1) -> Unit {
-  match self.prgMode.inner() {
+  match self.prgMode.to_int() {
     0 | 1 => {
-      self.prgOffsets[0] = self.prgBankOffset(self.prgBank.inner() & 0xFE)
-      self.prgOffsets[1] = self.prgBankOffset(self.prgBank.inner() | 0x01)
+      self.prgOffsets[0] = self.prgBankOffset(self.prgBank.to_int() & 0xFE)
+      self.prgOffsets[1] = self.prgBankOffset(self.prgBank.to_int() | 0x01)
     }
     2 => {
       self.prgOffsets[0] = 0
-      self.prgOffsets[1] = self.prgBankOffset(self.prgBank.inner())
+      self.prgOffsets[1] = self.prgBankOffset(self.prgBank.to_int())
     }
     3 => {
-      self.prgOffsets[0] = self.prgBankOffset(self.prgBank.inner())
+      self.prgOffsets[0] = self.prgBankOffset(self.prgBank.to_int())
       self.prgOffsets[1] = self.prgBankOffset(-1)
     }
   }
-  match self.chrMode.inner() {
+  match self.chrMode.to_int() {
     0 => {
-      self.chrOffsets[0] = self.chrBankOffset(self.chrBank0.inner() & 0xFE)
-      self.chrOffsets[1] = self.chrBankOffset(self.chrBank0.inner() | 0x01)
+      self.chrOffsets[0] = self.chrBankOffset(self.chrBank0.to_int() & 0xFE)
+      self.chrOffsets[1] = self.chrBankOffset(self.chrBank0.to_int() | 0x01)
     }
     1 => {
-      self.chrOffsets[0] = self.chrBankOffset(self.chrBank0.inner())
-      self.chrOffsets[1] = self.chrBankOffset(self.chrBank1.inner())
+      self.chrOffsets[0] = self.chrBankOffset(self.chrBank0.to_int())
+      self.chrOffsets[1] = self.chrBankOffset(self.chrBank1.to_int())
     }
   }
 }
@@ -382,16 +382,16 @@ impl IMapper for Mapper3 with step(self : Mapper3) -> Unit {
 ///|
 impl IMapper for Mapper3 with idx(self : Mapper3, adr : UInt16) -> UInt8 {
   if adr < (0x2000 |> to_u16) {
-    let index = self.chrBank * 0x2000 + adr.inner()
+    let index = self.chrBank * 0x2000 + adr.to_int()
     self.cartridge.chr[index]
   } else if adr >= (0xC000 |> to_u16) {
-    let index = self.prgBank2 * 0x4000 + (adr.inner() - 0xC000)
+    let index = self.prgBank2 * 0x4000 + (adr.to_int() - 0xC000)
     self.cartridge.prg[index]
   } else if adr >= (0x8000 |> to_u16) {
-    let index = self.prgBank1 * 0x4000 + (adr.inner() - 0x8000)
+    let index = self.prgBank1 * 0x4000 + (adr.to_int() - 0x8000)
     self.cartridge.prg[index]
   } else if adr >= (0x6000 |> to_u16) {
-    let index = adr.inner() - 0x6000
+    let index = adr.to_int() - 0x6000
     self.cartridge.sram[index]
   } else {
     abort("unhandled mapper3 read")
@@ -401,12 +401,12 @@ impl IMapper for Mapper3 with idx(self : Mapper3, adr : UInt16) -> UInt8 {
 ///|
 impl IMapper for Mapper3 with idxSet(self : Mapper3, adr : UInt16, val : UInt8) -> Unit {
   if adr < (0x2000 |> to_u16) {
-    let index = self.chrBank * 0x2000 + adr.inner()
+    let index = self.chrBank * 0x2000 + adr.to_int()
     self.cartridge.chr[index] = val
   } else if adr >= (0x8000 |> to_u16) {
-    self.chrBank = val.inner() & 3
+    self.chrBank = val.to_int() & 3
   } else if adr >= (0x6000 |> to_u16) {
-    let index = adr.inner() - 0x6000
+    let index = adr.to_int() - 0x6000
     self.cartridge.sram[index] = val
   } else {
     abort("unhandled mapper3 write")
@@ -462,7 +462,7 @@ impl IMapper for Mapper4 with step(self : Mapper4) -> Unit {
 
 ///|
 impl IMapper for Mapper4 with idx(self : Mapper4, adr : UInt16) -> UInt8 {
-  let mut address = adr.inner()
+  let mut address = adr.to_int()
   if address < 0x2000 {
     let bank = address / 0x0400
     let offset = address % 0x0400
@@ -482,7 +482,7 @@ impl IMapper for Mapper4 with idx(self : Mapper4, adr : UInt16) -> UInt8 {
 
 ///|
 impl IMapper for Mapper4 with idxSet(self : Mapper4, adr : UInt16, val : UInt8) -> Unit {
-  let address = adr.inner()
+  let address = adr.to_int()
   if address < 0x2000 {
     let bank = address / 0x0400
     let offset = address % 0x0400
@@ -510,7 +510,7 @@ fn Mapper4::handleScanLine(self : Mapper4) -> Unit {
 
 ///|
 fn Mapper4::writeRegister(self : Mapper4, adr : UInt16, value : UInt8) -> Unit {
-  let address = adr.inner()
+  let address = adr.to_int()
   if address <= 0x9FFF && address % 2 == 0 {
     self.writeBankSelect(value)
   } else if address <= 0x9FFF && address % 2 == 1 {
@@ -540,13 +540,13 @@ fn Mapper4::writeBankSelect(self : Mapper4, value : UInt8) -> Unit {
 
 ///|
 fn Mapper4::writeBankData(self : Mapper4, value : UInt8) -> Unit {
-  self.registers[self.register.inner()] = value
+  self.registers[self.register.to_int()] = value
   self.updateOffsets()
 }
 
 ///|
 fn Mapper4::writeMirror(self : Mapper4, value : UInt8) -> Unit {
-  match value.inner() & 1 {
+  match value.to_int() & 1 {
     0 => self.cartridge.mirror = mirrorVertical
     1 => self.cartridge.mirror = mirrorHorizontal
   }
@@ -603,40 +603,40 @@ fn Mapper4::chrBankOffset(self : Mapper4, index : Int) -> Int {
 
 ///|
 fn Mapper4::updateOffsets(self : Mapper4) -> Unit {
-  match self.prgMode.inner() {
+  match self.prgMode.to_int() {
     0 => {
-      self.prgOffsets[0] = self.prgBankOffset(self.registers[6].inner())
-      self.prgOffsets[1] = self.prgBankOffset(self.registers[7].inner())
+      self.prgOffsets[0] = self.prgBankOffset(self.registers[6].to_int())
+      self.prgOffsets[1] = self.prgBankOffset(self.registers[7].to_int())
       self.prgOffsets[2] = self.prgBankOffset(-2)
       self.prgOffsets[3] = self.prgBankOffset(-1)
     }
     1 => {
       self.prgOffsets[0] = self.prgBankOffset(-2)
-      self.prgOffsets[1] = self.prgBankOffset(self.registers[7].inner())
-      self.prgOffsets[2] = self.prgBankOffset(self.registers[6].inner())
+      self.prgOffsets[1] = self.prgBankOffset(self.registers[7].to_int())
+      self.prgOffsets[2] = self.prgBankOffset(self.registers[6].to_int())
       self.prgOffsets[3] = self.prgBankOffset(-1)
     }
   }
-  match self.chrMode.inner() {
+  match self.chrMode.to_int() {
     0 => {
-      self.chrOffsets[0] = self.chrBankOffset(self.registers[0].inner() & 0xFE)
-      self.chrOffsets[1] = self.chrBankOffset(self.registers[0].inner() | 0x01)
-      self.chrOffsets[2] = self.chrBankOffset(self.registers[1].inner() & 0xFE)
-      self.chrOffsets[3] = self.chrBankOffset(self.registers[1].inner() | 0x01)
-      self.chrOffsets[4] = self.chrBankOffset(self.registers[2].inner())
-      self.chrOffsets[5] = self.chrBankOffset(self.registers[3].inner())
-      self.chrOffsets[6] = self.chrBankOffset(self.registers[4].inner())
-      self.chrOffsets[7] = self.chrBankOffset(self.registers[5].inner())
+      self.chrOffsets[0] = self.chrBankOffset(self.registers[0].to_int() & 0xFE)
+      self.chrOffsets[1] = self.chrBankOffset(self.registers[0].to_int() | 0x01)
+      self.chrOffsets[2] = self.chrBankOffset(self.registers[1].to_int() & 0xFE)
+      self.chrOffsets[3] = self.chrBankOffset(self.registers[1].to_int() | 0x01)
+      self.chrOffsets[4] = self.chrBankOffset(self.registers[2].to_int())
+      self.chrOffsets[5] = self.chrBankOffset(self.registers[3].to_int())
+      self.chrOffsets[6] = self.chrBankOffset(self.registers[4].to_int())
+      self.chrOffsets[7] = self.chrBankOffset(self.registers[5].to_int())
     }
     1 => {
-      self.chrOffsets[0] = self.chrBankOffset(self.registers[2].inner())
-      self.chrOffsets[1] = self.chrBankOffset(self.registers[3].inner())
-      self.chrOffsets[2] = self.chrBankOffset(self.registers[4].inner())
-      self.chrOffsets[3] = self.chrBankOffset(self.registers[5].inner())
-      self.chrOffsets[4] = self.chrBankOffset(self.registers[0].inner() & 0xFE)
-      self.chrOffsets[5] = self.chrBankOffset(self.registers[0].inner() | 0x01)
-      self.chrOffsets[6] = self.chrBankOffset(self.registers[1].inner() & 0xFE)
-      self.chrOffsets[7] = self.chrBankOffset(self.registers[1].inner() | 0x01)
+      self.chrOffsets[0] = self.chrBankOffset(self.registers[2].to_int())
+      self.chrOffsets[1] = self.chrBankOffset(self.registers[3].to_int())
+      self.chrOffsets[2] = self.chrBankOffset(self.registers[4].to_int())
+      self.chrOffsets[3] = self.chrBankOffset(self.registers[5].to_int())
+      self.chrOffsets[4] = self.chrBankOffset(self.registers[0].to_int() & 0xFE)
+      self.chrOffsets[5] = self.chrBankOffset(self.registers[0].to_int() | 0x01)
+      self.chrOffsets[6] = self.chrBankOffset(self.registers[1].to_int() & 0xFE)
+      self.chrOffsets[7] = self.chrBankOffset(self.registers[1].to_int() | 0x01)
     }
   }
 }
@@ -711,7 +711,7 @@ fn newMapper7(self : NES) -> Mapper {
 ///|
 fn Mapper::new(nes : NES) -> Mapper {
   println("creating mapper")
-  match nes.cartridge.mapper.inner() {
+  match nes.cartridge.mapper.to_int() {
     0 | 2 => nes.newMapper2()
     1 => nes.newMapper1()
     3 => nes.newMapper3()

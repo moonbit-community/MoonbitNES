@@ -3,6 +3,7 @@
 // Copyright (c) 2024 Liu Rujia, International Digital Economy Academy
 
 // TODO: use interface
+
 ///|
 struct MemoryReader {
   data : FixedArray[Int]

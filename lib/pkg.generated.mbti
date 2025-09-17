@@ -1,0 +1,90 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbit-community/MoonbitNES/lib"
+
+// Values
+fn buttonDown(Int, Int) -> Unit
+
+fn buttonUp(Int, Int) -> Unit
+
+fn load_rom(FixedArray[Int]) -> Unit
+
+fn load_rom_extern(Int) -> Unit
+
+fn nestest(FixedArray[Int]) -> Unit
+
+fn nestest_extern(Int) -> Unit
+
+fn run(Double) -> Unit
+
+fn run_with_logging(Int) -> Unit
+
+// Errors
+
+// Types and methods
+type APU
+
+type AddressingMode
+impl Eq for AddressingMode
+
+type CPU
+
+type CPUMemory
+
+type Cartridge
+
+type Color
+
+type Controller
+
+type DMC
+
+type GlobalState
+
+type INESHeader
+
+type Interrupt
+
+type Mapper
+
+type Mapper1
+
+type Mapper2
+
+type Mapper3
+
+type Mapper4
+
+type Mapper7
+
+type MemoryReader
+
+type NES
+
+type Noise
+
+type PPU
+
+type PPUMemory
+
+type Picture
+
+type Pulse
+
+type StepInfo
+impl Default for StepInfo
+
+type Triangle
+
+// Type aliases
+
+// Traits
+trait IMapper
+
+trait U16
+
+trait U32
+
+trait U64
+
+trait U8
+

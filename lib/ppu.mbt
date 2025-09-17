@@ -211,21 +211,21 @@ let mirrorLookup = [
 
 ///|
 fn mirrorAddress(mode : UInt8, adr : UInt16) -> UInt16 {
-  let adr = (adr - (0x2000 |> to_u16)).inner() % 0x1000
+  let adr = (adr - (0x2000 |> to_u16)).to_int() % 0x1000
   let table = (adr / 0x0400) |> to_u8
   let offset = adr % 0x0400
 
   // TODO: do we need to do wrapped op every time?
-  (mirrorLookup[mode.inner()][table.inner()] * 0x0400 + 0x2000 + offset)
+  (mirrorLookup[mode.to_int()][table.to_int()] * 0x0400 + 0x2000 + offset)
   |> to_u16
 }
 
 ///|
 fn paletteAdr(adr : UInt16) -> Int {
-  if adr >= (16 |> to_u16) && adr.inner() % 4 == 0 {
-    adr.inner() - 16
+  if adr >= (16 |> to_u16) && adr.to_int() % 4 == 0 {
+    adr.to_int() - 16
   } else {
-    adr.inner()
+    adr.to_int()
   }
 }
 
@@ -276,13 +276,13 @@ fn PPU::writePalette(self : PPU, adr : UInt16, val : UInt8) -> Unit {
 fn PPUMemory::op_get(self : PPUMemory, adr : UInt16) -> UInt8 {
   let adr = adr % (0x4000 |> to_u16)
   let nes = self.nes.unwrap()
-  if adr.inner() >= 0x0000 && adr.inner() <= 0x1FFF {
+  if adr.to_int() >= 0x0000 && adr.to_int() <= 0x1FFF {
     let m = nes.mapper.unwrap()
     m[adr]
-  } else if adr.inner() >= 0x2000 && adr.inner() <= 0x3EFF {
+  } else if adr.to_int() >= 0x2000 && adr.to_int() <= 0x3EFF {
     let mode = nes.cartridge.mirror
-    nes.ppu.nameTableData[(mirrorAddress(mode, adr) % (2048 |> to_u16)).inner()]
-  } else if adr.inner() >= 0x3F00 && adr.inner() <= 0x3FFF {
+    nes.ppu.nameTableData[(mirrorAddress(mode, adr) % (2048 |> to_u16)).to_int()]
+  } else if adr.to_int() >= 0x3F00 && adr.to_int() <= 0x3FFF {
     nes.ppu.readPalette(adr % (32 |> to_u16))
   } else {
     0 |> to_u8
@@ -293,20 +293,20 @@ fn PPUMemory::op_get(self : PPUMemory, adr : UInt16) -> UInt8 {
 fn PPUMemory::op_set(self : PPUMemory, adr : UInt16, val : UInt8) -> Unit {
   let adr = adr % (0x4000 |> to_u16)
   let nes = self.nes.unwrap()
-  if adr.inner() >= 0x0000 && adr.inner() <= 0x1FFF {
+  if adr.to_int() >= 0x0000 && adr.to_int() <= 0x1FFF {
     let m = nes.mapper.unwrap()
     m[adr] = val
-  } else if adr.inner() >= 0x2000 && adr.inner() <= 0x3EFF {
+  } else if adr.to_int() >= 0x2000 && adr.to_int() <= 0x3EFF {
     let mode = nes.cartridge.mirror
-    nes.ppu.nameTableData[(mirrorAddress(mode, adr) % (2048 |> to_u16)).inner()] = val
-  } else if adr.inner() >= 0x3F00 && adr.inner() <= 0x3FFF {
+    nes.ppu.nameTableData[(mirrorAddress(mode, adr) % (2048 |> to_u16)).to_int()] = val
+  } else if adr.to_int() >= 0x3F00 && adr.to_int() <= 0x3FFF {
     nes.ppu.writePalette(adr % (32 |> to_u16), val)
   }
 }
 
 ///|
 fn PPU::readRegister(self : PPU, adr : UInt16) -> UInt8 {
-  match adr.inner() {
+  match adr.to_int() {
     0x2002 => self.readStatus()
     0x2004 => self.readOAMData()
     0x2007 => self.readData()
@@ -317,7 +317,7 @@ fn PPU::readRegister(self : PPU, adr : UInt16) -> UInt8 {
 ///|
 fn PPU::writeRegister(self : PPU, adr : UInt16, val : UInt8) -> Unit {
   self.register = val
-  match adr.inner() {
+  match adr.to_int() {
     0x2000 => self.writeControl(val)
     0x2001 => self.writeMask(val)
     0x2003 => self.writeOAMAddress(val)
@@ -390,7 +390,7 @@ fn PPU::writeOAMAddress(self : PPU, val : UInt8) -> Unit {
 
 ///|
 fn PPU::readOAMData(self : PPU) -> UInt8 {
-  let mut data = self.oamData[self.oamAddress.inner()]
+  let mut data = self.oamData[self.oamAddress.to_int()]
   if (self.oamAddress & (0x03 |> to_u8)) == (0x02 |> to_u8) {
     data = data & (0xE3 |> to_u8)
   }
@@ -401,7 +401,7 @@ fn PPU::readOAMData(self : PPU) -> UInt8 {
 
 ///|
 fn PPU::writeOAMData(self : PPU, val : UInt8) -> Unit {
-  self.oamData[self.oamAddress.inner()] = val
+  self.oamData[self.oamAddress.to_int()] = val
   self.oamAddress = self.oamAddress + (1 |> to_u8)
 }
 
@@ -461,7 +461,7 @@ fn PPU::readData(self : PPU) -> UInt8 {
   let mut val = self.mem[self.v]
 
   // emulate buffered reads
-  if self.v.inner() % 0x4000 < 0x3F00 {
+  if self.v.to_int() % 0x4000 < 0x3F00 {
     // (self.bufferedData, result) = (result, self.bufferedData)
     let buffered = self.bufferedData
     self.bufferedData = val
@@ -498,7 +498,7 @@ fn PPU::writeDMA(self : PPU, val : UInt8) -> Unit {
   for i = 0, adr = val.u16() << 8
       i <= 255
       i = i + 1, adr = adr + (1 |> to_u16) {
-    self.oamData[self.oamAddress.inner()] = cpu.mem[adr]
+    self.oamData[self.oamAddress.to_int()] = cpu.mem[adr]
     self.oamAddress = self.oamAddress + (1 |> to_u8)
   }
   cpu.stall = cpu.stall + 513
@@ -630,7 +630,7 @@ fn PPU::fetchAttributeTableByte(self : PPU) -> Unit {
   // shift := ((v >> 4) & 4) | (v & 2)
   let shift = (((v >> 4) & (4 |> to_u16)) | (v & (2 |> to_u16))) |> to_u8
   // ppu.attributeTableByte = ((ppu.Read(address) >> shift) & 3) << 2
-  self.attributeTable = ((self.mem[adr] >> shift.inner()) & (3 |> to_u8)) << 2
+  self.attributeTable = ((self.mem[adr] >> shift.to_int()) & (3 |> to_u8)) << 2
 }
 
 // fineY := (ppu.v >> 12) & 7
@@ -643,7 +643,7 @@ fn PPU::tileAdr(self : PPU) -> Int {
   let fineY = (self.v >> 12) & (7 |> to_u16)
   let table = self.flagBackgroundTable
   let tile = self.nameTable
-  0x1000 * (table |> to_u8).inner() + tile.inner() * 16 + fineY.inner()
+  0x1000 * (table |> to_u8).to_int() + tile.to_int() * 16 + fineY.to_int()
 }
 
 ///|
@@ -668,9 +668,9 @@ fn PPU::storeTileData(self : PPU) -> Unit {
     self.highTile = self.highTile << 1
     continue i + 1,
       (data << 4) |
-      a.inner().to_int64() |
-      p1.inner().to_int64() |
-      p2.inner().to_int64()
+      a.to_int().to_int64() |
+      p1.to_int().to_int64() |
+      p2.to_int().to_int64()
   } else { // data |= uint32(a | p1 | p2)
     data
   }
@@ -687,8 +687,8 @@ fn PPU::backgroundPixel(self : PPU) -> UInt8 {
   if not(self.flagShowBackground) {
     return 0 |> to_u8
   }
-  let data = self.fetchTileData() >> ((7 - self.x.inner()) * 4)
-  (data.inner() & 0x0F) |> to_u8
+  let data = self.fetchTileData() >> ((7 - self.x.to_int()) * 4)
+  (data.to_int() & 0x0F) |> to_u8
 }
 
 ///|
@@ -699,7 +699,7 @@ fn PPU::spritePixel(self : PPU) -> (UInt8, UInt8) {
 
   //for i in 0 ..< ppu.spriteCount:
   for i = 0; i < self.spriteCount; {
-    let mut offset = self.cycle - 1 - self.spritePositions[i].inner()
+    let mut offset = self.cycle - 1 - self.spritePositions[i].to_int()
     //if offset notin 0..7:
     // TODO: change to for ... in
     if offset < 0 || offset > 7 {
@@ -709,7 +709,7 @@ fn PPU::spritePixel(self : PPU) -> (UInt8, UInt8) {
     // CHECKME
     let color = ((self.spritePatterns[i] >> (offset * 4)) & (0x0F |> to_u32))
       |> to_u8()
-    if color.inner() % 4 == 0 {
+    if color.to_int() % 4 == 0 {
       continue i + 1
     }
     return (i |> to_u8(), color)
@@ -732,8 +732,8 @@ fn PPU::renderPixel(self : PPU) -> Unit {
       sprite = 0 |> to_u8
     }
   }
-  let b = background.inner() % 4 != 0
-  let s = sprite.inner() % 4 != 0
+  let b = background.to_int() % 4 != 0
+  let s = sprite.to_int() % 4 != 0
   let mut color = 0 |> to_u8
   if not(b) && not(s) {
     color = 0 |> to_u8
@@ -742,16 +742,16 @@ fn PPU::renderPixel(self : PPU) -> Unit {
   } else if b && not(s) {
     color = background
   } else {
-    if self.spriteIndices[i.inner()] == (0 |> to_u8) && x < 255 {
+    if self.spriteIndices[i.to_int()] == (0 |> to_u8) && x < 255 {
       self.flagSpriteZeroHit = true
     }
-    if self.spritePriorities[i.inner()] == (0 |> to_u8) {
+    if self.spritePriorities[i.to_int()] == (0 |> to_u8) {
       color = sprite | (0x10 |> to_u8)
     } else {
       color = background
     }
   }
-  let c = palette[self.readPalette(color.u16()).inner() % 64]
+  let c = palette[self.readPalette(color.u16()).to_int() % 64]
   self.back.pixels[y][x] = c
 }
 
@@ -780,8 +780,8 @@ fn PPU::fetchSpritePattern(self : PPU, i : Int, row : Int) -> UInt32 {
   }
 
   // CHECK the coercion points
-  adr = ((table.inner() * 0x1000) |> to_u16) +
-    ((tile.inner() * 16) |> to_u16) +
+  adr = ((table.to_int() * 0x1000) |> to_u16) +
+    ((tile.to_int() * 16) |> to_u16) +
     (row |> to_u16())
   let a = (attributes & (3 |> to_u8)) << 2
   let mut lowTileByte = self.mem[adr]
@@ -814,7 +814,7 @@ fn PPU::evaluateSprites(self : PPU) -> Unit {
     let y = self.oamData[i * 4 + 0]
     let a = self.oamData[i * 4 + 2]
     let x = self.oamData[i * 4 + 3]
-    let row = self.scanLine - y.inner()
+    let row = self.scanLine - y.to_int()
     if row < 0 || row >= h {
       continue i + 1, count
     }

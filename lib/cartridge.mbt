@@ -103,8 +103,8 @@ fn newCartridge(data : FixedArray[Int]) -> Cartridge {
       (1 |> to_u8)
     ) !=
     (0 |> to_u8)
-  let prg_len = header.numPRG.inner() * 16384
-  let chr_len = header.numCHR.inner() * 8192
+  let prg_len = header.numPRG.to_int() * 16384
+  let chr_len = header.numCHR.to_int() * 8192
 
   // read trainer if present (unused)
   if (header.control1 & (4 |> to_u8)) == (4 |> to_u8) {

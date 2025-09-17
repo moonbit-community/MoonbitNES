@@ -11,7 +11,7 @@ fn nes_write_color(
   offset_ : Int,
   red~ : Int,
   green~ : Int,
-  blue~ : Int
+  blue~ : Int,
 ) -> Unit {
   store32(
     offset.val + offset_ * 4,

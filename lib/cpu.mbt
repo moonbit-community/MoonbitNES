@@ -124,19 +124,19 @@ struct StepInfo {
 ///|
 fn CPUMemory::op_get(self : CPUMemory, adr : UInt16) -> UInt8 {
   let n = self.nes.unwrap()
-  if adr.inner() >= 0x0000 && adr.inner() <= 0x1FFF {
-    n.ram[adr.inner() % 0x0800]
+  if adr.to_int() >= 0x0000 && adr.to_int() <= 0x1FFF {
+    n.ram[adr.to_int() % 0x0800]
   } else if adr >= (0x2000 |> to_u16) && adr <= (0x3FFF |> to_u16) {
-    n.ppu.readRegister((0x2000 |> to_u16) + ((adr.inner() % 8) |> to_u16))
-  } else if adr.inner() == 0x4014 {
+    n.ppu.readRegister((0x2000 |> to_u16) + ((adr.to_int() % 8) |> to_u16))
+  } else if adr.to_int() == 0x4014 {
     n.ppu.readRegister(adr)
-  } else if adr.inner() == 0x4015 {
+  } else if adr.to_int() == 0x4015 {
     n.apu.readRegister(adr)
-  } else if adr.inner() == 0x4016 {
+  } else if adr.to_int() == 0x4016 {
     n.controllers[0].read()
-  } else if adr.inner() == 0x4017 {
+  } else if adr.to_int() == 0x4017 {
     n.controllers[1].read()
-  } else if adr.inner() >= 0x6000 && adr.inner() <= 0xFFFF {
+  } else if adr.to_int() >= 0x6000 && adr.to_int() <= 0xFFFF {
     let m = n.mapper.unwrap()
     m[adr]
   } else {
@@ -147,23 +147,26 @@ fn CPUMemory::op_get(self : CPUMemory, adr : UInt16) -> UInt8 {
 ///|
 fn CPUMemory::op_set(self : CPUMemory, adr : UInt16, val : UInt8) -> Unit {
   let n = self.nes.unwrap()
-  if adr.inner() >= 0x0000 && adr.inner() <= 0x1FFF {
+  if adr.to_int() >= 0x0000 && adr.to_int() <= 0x1FFF {
     // let addr = adr._
     // let v = val.0
     // log_string("[CPUMemory] set \(addr) to \(v)")
-    n.ram[adr.inner() % 0x0800] = val
-  } else if adr.inner() >= 0x2000 && adr.inner() <= 0x3FFF {
-    n.ppu.writeRegister((0x2000 |> to_u16) + ((adr.inner() % 8) |> to_u16), val)
-  } else if adr.inner() == 0x4014 {
+    n.ram[adr.to_int() % 0x0800] = val
+  } else if adr.to_int() >= 0x2000 && adr.to_int() <= 0x3FFF {
+    n.ppu.writeRegister(
+      (0x2000 |> to_u16) + ((adr.to_int() % 8) |> to_u16),
+      val,
+    )
+  } else if adr.to_int() == 0x4014 {
     n.ppu.writeRegister(adr, val)
-  } else if (adr.inner() >= 0x4000 && adr.inner() <= 0x4013) ||
-    adr.inner() == 0x4015 ||
-    adr.inner() == 0x4017 {
+  } else if (adr.to_int() >= 0x4000 && adr.to_int() <= 0x4013) ||
+    adr.to_int() == 0x4015 ||
+    adr.to_int() == 0x4017 {
     n.apu.writeRegister(adr, val)
-  } else if adr.inner() == 0x4016 {
+  } else if adr.to_int() == 0x4016 {
     n.controllers[0].write(val)
     n.controllers[1].write(val)
-  } else if adr.inner() >= 0x6000 && adr.inner() <= 0xFFFF {
+  } else if adr.to_int() >= 0x6000 && adr.to_int() <= 0xFFFF {
     let m = n.mapper.unwrap()
     m[adr] = val
   }
@@ -281,10 +284,10 @@ fn CPU::reset(self : CPU) -> Unit {
 ///|
 fn CPU::formatAssemblySuffix(self : CPU) -> String {
   let opcode = self.mem[self.pc]
-  let name = instructionNames[opcode.inner()]
-  let bytes = instructionSizes[opcode.inner()]
-  let mode = instructionModes[opcode.inner()] |> addressingMode
-  let modei = instructionModes[opcode.inner()]
+  let name = instructionNames[opcode.to_int()]
+  let bytes = instructionSizes[opcode.to_int()]
+  let mode = instructionModes[opcode.to_int()] |> addressingMode
+  let modei = instructionModes[opcode.to_int()]
   //log_string("opcode addressing mode: \(modei)")
 
   let mem_addr = self.get_addr(mode)
@@ -299,7 +302,7 @@ fn CPU::formatAssemblySuffix(self : CPU) -> String {
   let mem_addr8_hex = (mem_addr |> to_u8()).to_hex()
   match bytes {
     1 =>
-      match opcode.inner() {
+      match opcode.to_int() {
         0x0a | 0x4a | 0x2a | 0x6a => "A "
         _ => ""
       }
@@ -375,7 +378,7 @@ fn CPU::formatAssemblySuffix(self : CPU) -> String {
 ///|
 fn CPU::formatAssembly(self : CPU) -> String {
   let opcode = self.mem[self.pc]
-  let name = instructionNames[opcode.inner()]
+  let name = instructionNames[opcode.to_int()]
   loop name + " " + self.formatAssemblySuffix() {
     s => if s.length() < 32 { continue s + " " } else { s }
   }
@@ -391,8 +394,8 @@ fn isSpecialOpcode(op : Int) -> Bool {
 ///|
 fn CPU::formatInstruction(self : CPU) -> String {
   let opcode = self.mem[self.pc]
-  let bytes = instructionSizes[opcode.inner()]
-  let name = instructionNames[opcode.inner()]
+  let bytes = instructionSizes[opcode.to_int()]
+  let name = instructionNames[opcode.to_int()]
   let w0 = self.mem[self.pc + (0 |> to_u16)].to_hex()
   let mut w1 = self.mem[self.pc + (1 |> to_u16)].to_hex()
   let mut w2 = self.mem[self.pc + (2 |> to_u16)].to_hex()
@@ -402,7 +405,7 @@ fn CPU::formatInstruction(self : CPU) -> String {
   if bytes < 3 {
     w2 = "  "
   }
-  let uf = if isSpecialOpcode(opcode.inner()) { "*" } else { " " }
+  let uf = if isSpecialOpcode(opcode.to_int()) { "*" } else { " " }
   let asm_ = self.formatAssembly()
   let pc = self.pc.to_hex()
   let a = self.a.to_hex()
@@ -422,8 +425,8 @@ fn CPU::formatInstruction(self : CPU) -> String {
 ///|
 fn CPU::formatInstructionWithMesen2Extended(self : CPU) -> String {
   let opcode = self.mem[self.pc]
-  let bytes = instructionSizes[opcode.inner()]
-  let name = instructionNames[opcode.inner()]
+  let bytes = instructionSizes[opcode.to_int()]
+  let name = instructionNames[opcode.to_int()]
   let w0 = self.mem[self.pc + (0 |> to_u16)].to_hex()
   let mut w1 = self.mem[self.pc + (1 |> to_u16)].to_hex()
   let mut w2 = self.mem[self.pc + (2 |> to_u16)].to_hex()
@@ -433,7 +436,7 @@ fn CPU::formatInstructionWithMesen2Extended(self : CPU) -> String {
   if bytes < 3 {
     w2 = "  "
   }
-  let uf = if isSpecialOpcode(opcode.inner()) { "*" } else { " " }
+  let uf = if isSpecialOpcode(opcode.to_int()) { "*" } else { " " }
   let asm_ = self.formatAssembly()
   let pc = self.pc.to_hex()
   let a = self.a.to_hex()
@@ -520,7 +523,7 @@ fn CPU::opADC(self : CPU, info : StepInfo) -> Unit {
   let c = self.c |> to_u8()
   self.a = a + b + c
   self.setZN(self.a)
-  self.c = a.inner() + b.inner() + c.inner() > 0xFF
+  self.c = a.to_int() + b.to_int() + c.to_int() > 0xFF
   // (a^b)&0x80 == 0 && (a^self.a)&0x80 != 0
   self.v = ((a ^ b) & (0x80 |> to_u8())) == (0 |> to_u8()) &&
     ((a ^ self.a) & (0x80 |> to_u8())) != (0 |> to_u8())
@@ -927,7 +930,7 @@ fn CPU::opSBC(self : CPU, info : StepInfo) -> Unit {
   let c = self.c |> to_u8()
   self.a = a - b - ((1 |> to_u8()) - c)
   self.setZN(self.a)
-  self.c = a.inner() - b.inner() - ((1 |> to_u8()) - c).inner() >= 0
+  self.c = a.to_int() - b.to_int() - ((1 |> to_u8()) - c).to_int() >= 0
   self.v = ((a ^ b) & (0x80 |> to_u8())) != (0 |> to_u8()) &&
     ((a ^ self.a) & (0x80 |> to_u8())) != (0 |> to_u8())
 }
@@ -1607,7 +1610,7 @@ fn CPU::step(self : CPU, trace_log : Bool) -> Int {
   }
   self.interrupt = None
   let opcode = self.mem[self.pc]
-  let mode = instructionModes[opcode.inner()] |> addressingMode()
+  let mode = instructionModes[opcode.to_int()] |> addressingMode()
   let adr = self.get_addr(mode)
 
   // CHECKME: AbsoluteX can cross page too!
@@ -1616,11 +1619,11 @@ fn CPU::step(self : CPU, trace_log : Bool) -> Int {
       ([AbsoluteY, IndirectIndexed] : FixedArray[AddressingMode]).contains(mode) &&
       pagesDiffer(adr - (self.y |> to_u16), adr)
     ) {
-    self.cycles += instructionPageCycles[opcode.inner()].to_int64()
+    self.cycles += instructionPageCycles[opcode.to_int()].to_int64()
   }
-  self.pc += instructionSizes[opcode.inner()] |> to_u16
-  self.cycles += instructionCycles[opcode.inner()].to_int64()
+  self.pc += instructionSizes[opcode.to_int()] |> to_u16
+  self.cycles += instructionCycles[opcode.to_int()].to_int64()
   let info : StepInfo = { address: adr, pc: self.pc, mode }
-  instructions[opcode.inner()](self, info)
+  instructions[opcode.to_int()](self, info)
   (self.cycles - cycles).to_int()
 }
