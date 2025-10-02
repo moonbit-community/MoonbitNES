@@ -39,5 +39,14 @@
         "set_callback"
       ]
     }
+  },
+  "targets": {
+    "memory.wasm.mbt": ["wasm"],
+    "nes.js.mbt": ["js"],
+    "nes.wasm-gc.mbt": ["wasm-gc"],
+    "nes.wasm.mbt": ["wasm"],
+    "ppu.js.mbt": ["js"],
+    "ppu.wasm.mbt": ["wasm"],
+    "ppu.wasm-gc.mbt": ["wasm-gc"]
   }
 }
