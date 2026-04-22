@@ -122,7 +122,7 @@ fn initPalette() -> FixedArray[Color] {
     0xFFFEFF, 0xC0DFFF, 0xD3D2FF, 0xE8C8FF, 0xFBC2FF, 0xFEC4EA, 0xFECCC5, 0xF7D8A5,
     0xE4E594, 0xCFEF96, 0xBDF4AB, 0xB3F3CC, 0xB5EBF2, 0xB8B8B8, 0x000000, 0x000000,
   ]
-  cs.map(Color(_))
+  cs.map(fn(c) { Color(c) })
 }
 
 ///|
@@ -583,7 +583,7 @@ fn PPU::setVerticalBlank(self : PPU) -> Unit {
   // transfer a frame image to host
   for row = 0; row < resolution.1; row = row + 1 {
     for col = 0; col < resolution.0; col = col + 1 {
-      let color = self.back.pixels[row][col].inner()
+      let Color(color) = self.back.pixels[row][col]
       nes_write_color(
         row * resolution.0 + col,
         red=(color.land(0xFF0000).reinterpret_as_uint() >> 16)
