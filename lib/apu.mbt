@@ -405,7 +405,7 @@ fn Pulse::writeTimerLow(self : Pulse, val : UInt8) -> Unit {
 fn Pulse::writeTimerHigh(self : Pulse, val : UInt8) -> Unit {
   let value = val.to_int()
   self.lengthValue = lengthTable[value >> 3] |> to_u8
-  self.timerPeriod = (self.timerPeriod & (0x00FF)) |
+  self.timerPeriod = (self.timerPeriod & 0x00FF) |
     (((value & 7) << 8) |> to_u16) // CHECKME
   self.envelopeStart = true
   self.dutyValue = 0
@@ -545,7 +545,7 @@ fn Triangle::writeTimerLow(self : Triangle, val : UInt8) -> Unit {
 fn Triangle::writeTimerHigh(self : Triangle, val : UInt8) -> Unit {
   let value = val.to_int()
   self.lengthValue = lengthTable[(value & 0xFF) >> 3] |> to_u8
-  self.timerPeriod = (self.timerPeriod & (0x00FF)) |
+  self.timerPeriod = (self.timerPeriod & 0x00FF) |
     (((value & 7) << 8) |> to_u16) // CHECKME
   self.timerValue = self.timerPeriod
   self.counterReload = true
