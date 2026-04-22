@@ -291,19 +291,19 @@ fn APU::writeControl(self : APU, val : UInt8) -> Unit {
   self.triangle.enabled = (value & 4) == 4
   self.noise.enabled = (value & 8) == 8
   self.dmc.enabled = (value & 16) == 16
-  if not(self.pulse[0].enabled) {
+  if !self.pulse[0].enabled {
     self.pulse[0].lengthValue = 0
   }
-  if not(self.pulse[1].enabled) {
+  if !self.pulse[1].enabled {
     self.pulse[1].lengthValue = 0
   }
-  if not(self.triangle.enabled) {
+  if !self.triangle.enabled {
     self.triangle.lengthValue = 0
   }
-  if not(self.noise.enabled) {
+  if !self.noise.enabled {
     self.noise.lengthValue = 0
   }
-  if not(self.dmc.enabled) {
+  if !self.dmc.enabled {
     self.dmc.currentLength = 0
   } else if self.dmc.currentLength == 0 {
     self.dmc.restart()
@@ -479,7 +479,7 @@ fn Pulse::sweep(self : Pulse) -> Unit {
 
 ///|
 fn Pulse::output(self : Pulse) -> UInt8 {
-  if not(self.enabled) {
+  if !self.enabled {
     return 0
   }
   if self.lengthValue == 0 {
@@ -584,7 +584,7 @@ fn Triangle::stepCounter(self : Triangle) -> Unit {
 
 ///|
 fn Triangle::output(self : Triangle) -> UInt8 {
-  if not(self.enabled) {
+  if !self.enabled {
     return 0
   }
   if self.timerPeriod < 3 {
@@ -704,7 +704,7 @@ fn Noise::stepLength(self : Noise) -> Unit {
 
 ///|
 fn Noise::output(self : Noise) -> UInt8 {
-  if not(self.enabled) {
+  if !self.enabled {
     return 0
   }
   if self.lengthValue == 0 {
@@ -791,7 +791,7 @@ fn DMC::restart(self : DMC) -> Unit {
 
 ///|
 fn DMC::stepTimer(self : DMC) -> Unit {
-  if not(self.enabled) {
+  if !self.enabled {
     return
   }
   self.stepReader()

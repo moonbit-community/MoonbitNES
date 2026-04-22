@@ -465,7 +465,7 @@ fn PPU::readData(self : PPU) -> UInt8 {
   } else {
     self.bufferedData = self.mem[self.v - 0x1000]
   }
-  if not(self.flagIncrement) {
+  if !self.flagIncrement {
     self.v = self.v + 1
   } else {
     self.v = self.v + 32
@@ -478,7 +478,7 @@ fn PPU::readData(self : PPU) -> UInt8 {
 ///|
 fn PPU::writeData(self : PPU, val : UInt8) -> Unit {
   self.mem[self.v] = val
-  if not(self.flagIncrement) {
+  if !self.flagIncrement {
     self.v = self.v + 1
   } else {
     self.v = self.v + 32
@@ -565,7 +565,7 @@ fn PPU::copyY(self : PPU) -> Unit {
 ///|
 fn PPU::nmiChange(self : PPU) -> Unit {
   let nmi = self.nmiOutput && self.nmiOccured
-  if nmi && not(self.nmiPrevious) {
+  if nmi && !self.nmiPrevious {
     // TODO: this fixes some games but the delay shouldn't have to be so
     // long, so the timings are off somewhere
     self.nmiDelay = 15
@@ -674,7 +674,7 @@ fn PPU::fetchTileData(self : PPU) -> UInt32 {
 
 ///|
 fn PPU::backgroundPixel(self : PPU) -> UInt8 {
-  if not(self.flagShowBackground) {
+  if !self.flagShowBackground {
     return 0
   }
   let data = self.fetchTileData() >> ((7 - self.x.to_int()) * 4)
@@ -683,7 +683,7 @@ fn PPU::backgroundPixel(self : PPU) -> UInt8 {
 
 ///|
 fn PPU::spritePixel(self : PPU) -> (UInt8, UInt8) {
-  if not(self.flagShowSprites) {
+  if !self.flagShowSprites {
     return (0, 0)
   }
 
@@ -714,21 +714,21 @@ fn PPU::renderPixel(self : PPU) -> Unit {
   let (i, sprite) = self.spritePixel()
   let mut sprite = sprite
   if x < 8 {
-    if not(self.flagShowLeftBackground) {
+    if !self.flagShowLeftBackground {
       background = 0
     }
-    if not(self.flagShowLeftSprites) {
+    if !self.flagShowLeftSprites {
       sprite = 0
     }
   }
   let b = background.to_int() % 4 != 0
   let s = sprite.to_int() % 4 != 0
   let mut color : UInt8 = 0
-  if not(b) && not(s) {
+  if !b && !s {
     color = 0
-  } else if not(b) && s {
+  } else if !b && s {
     color = sprite | 0x10
-  } else if b && not(s) {
+  } else if b && !s {
     color = background
   } else {
     if self.spriteIndices[i.to_int()] == 0 && x < 255 {
@@ -751,7 +751,7 @@ fn PPU::fetchSpritePattern(self : PPU, i : Int, row : Int) -> UInt32 {
   let attributes = self.oamData[i * 4 + 2]
   let mut adr : UInt16 = 0
   let mut table : UInt8 = 0
-  if not(self.flagSpriteSize) {
+  if !self.flagSpriteSize {
     if (attributes & 0x80) == 0x80 {
       row = 7 - row
     }
@@ -799,7 +799,7 @@ fn PPU::fetchSpritePattern(self : PPU, i : Int, row : Int) -> UInt32 {
 
 ///|
 fn PPU::evaluateSprites(self : PPU) -> Unit {
-  let h = if not(self.flagSpriteSize) { 8 } else { 16 }
+  let h = if !self.flagSpriteSize { 8 } else { 16 }
   let count = for i = 0, count = 0; i < 64; i = i + 1, count = count + 1 {
     let y = self.oamData[i * 4 + 0]
     let a = self.oamData[i * 4 + 2]
