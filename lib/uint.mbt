@@ -83,7 +83,8 @@ impl U8 for Bool with u8(self : Bool) -> UInt8 {
 
 ///|
 fn UInt8::formatHex(self : UInt8) -> String {
-  ""
+  ((self >> 4).to_int() |> to_hex_digit) +
+  ((self & 0xf).to_int() |> to_hex_digit())
 }
 
 ///|
@@ -128,15 +129,9 @@ fn to_hex_digit(i : Int) -> String {
 }
 
 ///|
-fn UInt8::to_hex(self : UInt8) -> String {
-  ((self >> 4).to_int() |> to_hex_digit) +
-  ((self & 0xf).to_int() |> to_hex_digit())
-}
-
-///|
 fn UInt16::to_hex(self : UInt16) -> String {
-  ((self >> 8) |> to_u8 |> UInt8::to_hex) +
-  ((self & 0xff) |> to_u8 |> UInt8::to_hex)
+  ((self >> 8) |> to_u8 |> UInt8::formatHex) +
+  ((self & 0xff) |> to_u8 |> UInt8::formatHex)
 }
 
 ///|

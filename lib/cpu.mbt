@@ -296,9 +296,9 @@ fn CPU::formatAssemblySuffix(self : CPU) -> String {
   }
   let (mem_addr_hex, stored_value_hex) = (
     mem_addr.to_hex(),
-    stored_value.to_hex(),
+    stored_value.formatHex(),
   )
-  let mem_addr8_hex = (mem_addr |> to_u8()).to_hex()
+  let mem_addr8_hex = (mem_addr |> to_u8()).formatHex()
   match bytes {
     1 =>
       match opcode.to_int() {
@@ -307,7 +307,7 @@ fn CPU::formatAssemblySuffix(self : CPU) -> String {
       }
     2 => {
       let address = self.mem[self.pc + 1]
-      let address_hex = address.to_hex()
+      let address_hex = address.formatHex()
       match mode {
         Immediate => "#$\{address_hex}"
         ZeroPage => "$\{mem_addr8_hex} = \{stored_value_hex}"
@@ -317,7 +317,7 @@ fn CPU::formatAssemblySuffix(self : CPU) -> String {
           "$\{address_hex},Y @ \{mem_addr8_hex} = \{stored_value_hex}"
         // Indirect_X
         IndexedIndirect => {
-          let new_addr_hex = (address + self.x).to_hex()
+          let new_addr_hex = (address + self.x).formatHex()
           "($\{address_hex},X) @ \{new_addr_hex} = \{mem_addr_hex} = \{stored_value_hex}"
         }
         // Indirect_Y
@@ -395,9 +395,9 @@ fn CPU::formatInstruction(self : CPU) -> String {
   let opcode = self.mem[self.pc]
   let bytes = instructionSizes[opcode.to_int()]
   let name = instructionNames[opcode.to_int()]
-  let w0 = self.mem[self.pc + 0].to_hex()
-  let mut w1 = self.mem[self.pc + 1].to_hex()
-  let mut w2 = self.mem[self.pc + 2].to_hex()
+  let w0 = self.mem[self.pc + 0].formatHex()
+  let mut w1 = self.mem[self.pc + 1].formatHex()
+  let mut w2 = self.mem[self.pc + 2].formatHex()
   if bytes < 2 {
     w1 = "  "
   }
@@ -407,11 +407,11 @@ fn CPU::formatInstruction(self : CPU) -> String {
   let uf = if isSpecialOpcode(opcode.to_int()) { "*" } else { " " }
   let asm_ = self.formatAssembly()
   let pc = self.pc.to_hex()
-  let a = self.a.to_hex()
-  let x = self.x.to_hex()
-  let y = self.y.to_hex()
-  let p = self.flags().to_hex()
-  let sp = self.sp.to_hex()
+  let a = self.a.formatHex()
+  let x = self.x.formatHex()
+  let y = self.y.formatHex()
+  let p = self.flags().formatHex()
+  let sp = self.sp.formatHex()
   "\{pc}  \{w0} \{w1} \{w2} \{uf}\{asm_}A:\{a} X:\{x} Y:\{y} P:\{p} SP:\{sp}"
 }
 
@@ -426,9 +426,9 @@ fn CPU::formatInstructionWithMesen2Extended(self : CPU) -> String {
   let opcode = self.mem[self.pc]
   let bytes = instructionSizes[opcode.to_int()]
   let name = instructionNames[opcode.to_int()]
-  let w0 = self.mem[self.pc + 0].to_hex()
-  let mut w1 = self.mem[self.pc + 1].to_hex()
-  let mut w2 = self.mem[self.pc + 2].to_hex()
+  let w0 = self.mem[self.pc + 0].formatHex()
+  let mut w1 = self.mem[self.pc + 1].formatHex()
+  let mut w2 = self.mem[self.pc + 2].formatHex()
   if bytes < 2 {
     w1 = "  "
   }
@@ -438,11 +438,11 @@ fn CPU::formatInstructionWithMesen2Extended(self : CPU) -> String {
   let uf = if isSpecialOpcode(opcode.to_int()) { "*" } else { " " }
   let asm_ = self.formatAssembly()
   let pc = self.pc.to_hex()
-  let a = self.a.to_hex()
-  let x = self.x.to_hex()
-  let y = self.y.to_hex()
-  let p = self.flags().to_hex()
-  let sp = self.sp.to_hex()
+  let a = self.a.formatHex()
+  let x = self.x.formatHex()
+  let y = self.y.formatHex()
+  let p = self.flags().formatHex()
+  let sp = self.sp.formatHex()
   "\{pc}  \{w0} \{w1} \{w2} \{uf}\{asm_}A:\{a} X:\{x} Y:\{y} P:\{p} SP:\{sp}"
 }
 
@@ -450,7 +450,7 @@ fn CPU::formatInstructionWithMesen2Extended(self : CPU) -> String {
 fn CPU::formatMemoryDump(self : CPU, base : UInt16, cnt : Int) -> String {
   for i = 0, ret = ""
       i < cnt
-      i = i + 1, ret = ret + self.mem[base + (i |> to_u16)].to_hex() + " " {
+      i = i + 1, ret = ret + self.mem[base + (i |> to_u16)].formatHex() + " " {
 
   } else {
     ret
