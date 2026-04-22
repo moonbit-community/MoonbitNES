@@ -375,8 +375,12 @@ fn CPU::formatAssemblySuffix(self : CPU) -> String {
 fn CPU::formatAssembly(self : CPU) -> String {
   let opcode = self.mem[self.pc]
   let name = instructionNames[opcode.to_int()]
-  loop name + " " + self.formatAssemblySuffix() {
-    s => if s.length() < 32 { continue s + " " } else { s }
+  for s = name + " " + self.formatAssemblySuffix() {
+    if s.length() < 32 {
+      continue s + " "
+    } else {
+      break s
+    }
   }
 }
 
