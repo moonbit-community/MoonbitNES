@@ -5,10 +5,10 @@
 // try to get some type safety by wrapper UInt8 and UInt16
 
 ///|
-typealias Byte as UInt8
+type UInt8 = Byte
 
 ///|
-typealias UInt as UInt32
+type UInt32 = UInt
 
 ///|
 trait U8 {
