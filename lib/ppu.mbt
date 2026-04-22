@@ -661,7 +661,7 @@ fn PPU::storeTileData(self : PPU) -> Unit {
     self.lowTile = self.lowTile << 1
     self.highTile = self.highTile << 1
     continue i + 1, (data << 4) | a.to_int64() | p1.to_int64() | p2.to_int64()
-  } else { // data |= uint32(a | p1 | p2)
+  } nobreak { // data |= uint32(a | p1 | p2)
     data
   }
   self.tileData = self.tileData | data
@@ -792,7 +792,7 @@ fn PPU::fetchSpritePattern(self : PPU, i : Int, row : Int) -> UInt32 {
     }
     continue i + 1,
       (data << 4) | a.to_uint64() | p1.to_uint64() | p2.to_uint64()
-  } else {
+  } nobreak {
     data |> to_u32()
   }
 }
@@ -814,7 +814,7 @@ fn PPU::evaluateSprites(self : PPU) -> Unit {
       self.spritePriorities[count] = (a >> 5) & 1
       self.spriteIndices[count] = i |> to_u8
     }
-  } else {
+  } nobreak {
     count
   }
   if count > 8 {

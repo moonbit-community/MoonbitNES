@@ -166,8 +166,9 @@ fn MemoryReader::readUInt8Array(
   self : MemoryReader,
   cnt : Int,
 ) -> FixedArray[UInt8] {
-  let result = FixedArray::makei(cnt, index => self.data[self.pos + index]
-    |> to_u8)
+  let result = FixedArray::makei(cnt, index => {
+    self.data[self.pos + index] |> to_u8
+  })
   self.pos = self.pos + cnt
   result
 }

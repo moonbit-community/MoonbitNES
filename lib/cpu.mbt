@@ -126,8 +126,8 @@ fn CPUMemory::op_get(self : CPUMemory, adr : UInt16) -> UInt8 {
   let n = self.nes.unwrap()
   if adr.to_int() >= 0x0000 && adr.to_int() <= 0x1FFF {
     n.ram[adr.to_int() % 0x0800]
-  } else if adr >= (0x2000) && adr <= (0x3FFF) {
-    n.ppu.readRegister((0x2000) + ((adr.to_int() % 8) |> to_u16))
+  } else if adr >= 0x2000 && adr <= 0x3FFF {
+    n.ppu.readRegister(0x2000 + ((adr.to_int() % 8) |> to_u16))
   } else if adr.to_int() == 0x4014 {
     n.ppu.readRegister(adr)
   } else if adr.to_int() == 0x4015 {
@@ -153,10 +153,7 @@ fn CPUMemory::op_set(self : CPUMemory, adr : UInt16, val : UInt8) -> Unit {
     // log_string("[CPUMemory] set \(addr) to \(v)")
     n.ram[adr.to_int() % 0x0800] = val
   } else if adr.to_int() >= 0x2000 && adr.to_int() <= 0x3FFF {
-    n.ppu.writeRegister(
-      (0x2000) + ((adr.to_int() % 8) |> to_u16),
-      val,
-    )
+    n.ppu.writeRegister(0x2000 + ((adr.to_int() % 8) |> to_u16), val)
   } else if adr.to_int() == 0x4014 {
     n.ppu.writeRegister(adr, val)
   } else if (adr.to_int() >= 0x4000 && adr.to_int() <= 0x4013) ||
@@ -183,7 +180,7 @@ fn CPUMemory::read16(self : CPUMemory, adr : UInt16) -> UInt16 {
 fn CPUMemory::read16bug(self : CPUMemory, adr : UInt16) -> UInt16 {
   // Low byte wraps without incrementing high byte
   let a = adr
-  let b = (a & (0xFF00)) | (((adr |> to_u8()) + 1) |> to_u16)
+  let b = (a & 0xFF00) | (((adr |> to_u8()) + 1) |> to_u16)
   let lo = self[a]
   let hi = self[b]
   ((hi |> to_u16) << 8) | (lo |> to_u16)
@@ -191,14 +188,14 @@ fn CPUMemory::read16bug(self : CPUMemory, adr : UInt16) -> UInt16 {
 
 ///|
 fn CPU::push(self : CPU, val : UInt8) -> Unit {
-  self.mem[(self.sp |> to_u16) | (0x100)] = val
+  self.mem[(self.sp |> to_u16) | 0x100] = val
   self.sp = self.sp - 1
 }
 
 ///|
 fn CPU::pull(self : CPU) -> UInt8 {
   self.sp = self.sp + 1
-  self.mem[(self.sp |> to_u16) | (0x100)]
+  self.mem[(self.sp |> to_u16) | 0x100]
 }
 
 ///|
@@ -221,7 +218,7 @@ fn CPU::setZ(self : CPU, val : UInt8) -> Unit {
 
 ///|
 fn CPU::setN(self : CPU, val : UInt8) -> Unit {
-  self.n = (val & (0x80)) != 0
+  self.n = (val & 0x80) != 0
 }
 
 ///|
@@ -452,7 +449,7 @@ fn CPU::formatMemoryDump(self : CPU, base : UInt16, cnt : Int) -> String {
       i < cnt
       i = i + 1, ret = ret + self.mem[base + (i |> to_u16)].formatHex() + " " {
 
-  } else {
+  } nobreak {
     ret
   }
 }
@@ -490,7 +487,7 @@ fn initCPU() -> CPU {
 
 ///|
 fn pagesDiffer(a : UInt16, b : UInt16) -> Bool {
-  (a & (0xFF00)) != (b & (0xFF00))
+  (a & 0xFF00) != (b & 0xFF00)
 }
 
 // branch, then adds a cycle for taking a branch and adds another cycle
@@ -524,8 +521,7 @@ fn CPU::opADC(self : CPU, info : StepInfo) -> Unit {
   self.setZN(self.a)
   self.c = a.to_int() + b.to_int() + c.to_int() > 0xFF
   // (a^b)&0x80 == 0 && (a^self.a)&0x80 != 0
-  self.v = ((a ^ b) & (0x80)) == 0 &&
-    ((a ^ self.a) & (0x80)) != 0
+  self.v = ((a ^ b) & 0x80) == 0 && ((a ^ self.a) & 0x80) != 0
 }
 
 // AND - Logical and
@@ -845,7 +841,7 @@ fn CPU::opPHA(self : CPU, _info : StepInfo) -> Unit {
 
 ///|
 fn CPU::opPHP(self : CPU, _info : StepInfo) -> Unit {
-  self.push(self.flags() | (0x10))
+  self.push(self.flags() | 0x10)
 }
 
 // PLA - Pull accumulator
@@ -860,7 +856,7 @@ fn CPU::opPLA(self : CPU, _info : StepInfo) -> Unit {
 
 ///|
 fn CPU::opPLP(self : CPU, _info : StepInfo) -> Unit {
-  self.set_flags((self.pull() & (0xEF)) | (0x20)) // pull() & 0xEF | 0x20
+  self.set_flags((self.pull() & 0xEF) | 0x20) // pull() & 0xEF | 0x20
 }
 
 // ROL - Rotate left
@@ -909,7 +905,7 @@ fn CPU::opROR(self : CPU, info : StepInfo) -> Unit {
 
 ///|
 fn CPU::opRTI(self : CPU, info : StepInfo) -> Unit {
-  self.set_flags((self.pull() & (0xEF)) | (0x20)) // pull() & 0xEF | 0x20
+  self.set_flags((self.pull() & 0xEF) | 0x20) // pull() & 0xEF | 0x20
   self.pc = self.pull16()
 }
 
@@ -930,8 +926,7 @@ fn CPU::opSBC(self : CPU, info : StepInfo) -> Unit {
   self.a = a - b - (1 - c)
   self.setZN(self.a)
   self.c = a.to_int() - b.to_int() - ((1 : UInt8) - c).to_int() >= 0
-  self.v = ((a ^ b) & (0x80)) != 0 &&
-    ((a ^ self.a) & (0x80)) != 0
+  self.v = ((a ^ b) & 0x80) != 0 && ((a ^ self.a) & 0x80) != 0
 }
 
 // SEC - Set carry flag
@@ -1572,10 +1567,10 @@ fn CPU::get_addr(self : CPU, mode : AddressingMode) -> UInt16 {
     Accumulator | Implied => 0
     Relative => {
       let offset = self.mem[self.pc + 1] |> to_u16
-      if offset < (0x80) {
+      if offset < 0x80 {
         self.pc + 2 + offset
       } else {
-        self.pc + 2 + offset - (0x100)
+        self.pc + 2 + offset - 0x100
       }
     }
   }

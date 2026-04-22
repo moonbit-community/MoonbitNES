@@ -1,0 +1,44 @@
+warnings = "-1-2-4-7-11-15"
+
+options(
+  link: {
+    "js": {
+      "exports": [
+        "nestest",
+        "load_rom",
+        "run",
+        "buttonDown",
+        "buttonUp",
+        "run_with_logging",
+        "set_image_data",
+        "set_callback",
+      ],
+    },
+    "wasm": {
+      "export-memory-name": "moonbit.memory",
+      "exports": [
+        "nestest_extern:nestest",
+        "load_rom_extern:load_rom",
+        "run",
+        "buttonDown",
+        "buttonUp",
+        "run_with_logging",
+        "malloc",
+        "free",
+        "set_offset",
+      ],
+      "heap-start-address": 0,
+    },
+    "wasm-gc": {
+      "export-memory-name": "moonbit.memory",
+      "exports": [
+        "nestest_extern:nestest",
+        "load_rom_extern:load_rom",
+        "run",
+        "buttonDown",
+        "buttonUp",
+        "run_with_logging",
+      ],
+    },
+  },
+)

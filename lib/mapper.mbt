@@ -97,14 +97,14 @@ impl IMapper for Mapper2 with step(self : Mapper2) -> Unit {
 
 ///|
 impl IMapper for Mapper2 with idx(self : Mapper2, adr : UInt16) -> UInt8 {
-  if adr >= (0x0000) && adr <= (0x1FFF) {
+  if adr >= 0x0000 && adr <= 0x1FFF {
     return self.cartridge.chr[adr.to_int()]
-  } else if adr >= (0x6000) && adr <= (0x7FFF) {
+  } else if adr >= 0x6000 && adr <= 0x7FFF {
     return self.cartridge.sram[adr.to_int() - 0x6000]
-  } else if adr >= (0x8000) && adr <= (0xBFFF) {
+  } else if adr >= 0x8000 && adr <= 0xBFFF {
     let offset = self.prgBank1 * 0x4000 + (adr.to_int() - 0x8000)
     return self.cartridge.prg[offset]
-  } else if adr >= (0xC000) && adr <= (0xFFFF) {
+  } else if adr >= 0xC000 && adr <= 0xFFFF {
     let offset = self.prgBank2 * 0x4000 + (adr.to_int() - 0xC000)
     return self.cartridge.prg[offset]
   } else {
@@ -114,11 +114,11 @@ impl IMapper for Mapper2 with idx(self : Mapper2, adr : UInt16) -> UInt8 {
 
 ///|
 impl IMapper for Mapper2 with idxSet(self : Mapper2, adr : UInt16, val : UInt8) -> Unit {
-  if adr >= (0x0000) && adr <= (0x1FFF) {
+  if adr >= 0x0000 && adr <= 0x1FFF {
     self.cartridge.chr[adr.to_int()] = val // "but most emulators support RAM"
-  } else if adr >= (0x6000) && adr <= (0x7FFF) {
+  } else if adr >= 0x6000 && adr <= 0x7FFF {
     self.cartridge.sram[adr.to_int() - 0x6000] = val
-  } else if adr >= (0x8000) {
+  } else if adr >= 0x8000 {
     self.prgBank1 = val.to_int() % self.prgBanks
   }
 }
@@ -211,9 +211,9 @@ impl IMapper for Mapper1 with idxSet(self : Mapper1, adr : UInt16, val : UInt8) 
 
 ///|
 fn Mapper1::loadRegister(self : Mapper1, adr : UInt16, value : UInt8) -> Unit {
-  if (value & (0x80)) == (0x80) {
+  if (value & 0x80) == 0x80 {
     self.shiftRegister = 0x10
-    self.writeControl(self.control | (0x0C))
+    self.writeControl(self.control | 0x0C)
   } else {
     let complete = (self.shiftRegister & 1) == 1
     self.shiftRegister = self.shiftRegister >> 1
@@ -276,7 +276,7 @@ fn Mapper1::writeCHRBank1(self : Mapper1, value : UInt8) -> Unit {
 
 ///|
 fn Mapper1::writePRGBank(self : Mapper1, value : UInt8) -> Unit {
-  self.prgBank = value & (0x0F)
+  self.prgBank = value & 0x0F
   self.updateOffsets()
 }
 
@@ -381,16 +381,16 @@ impl IMapper for Mapper3 with step(self : Mapper3) -> Unit {
 
 ///|
 impl IMapper for Mapper3 with idx(self : Mapper3, adr : UInt16) -> UInt8 {
-  if adr < (0x2000) {
+  if adr < 0x2000 {
     let index = self.chrBank * 0x2000 + adr.to_int()
     self.cartridge.chr[index]
-  } else if adr >= (0xC000) {
+  } else if adr >= 0xC000 {
     let index = self.prgBank2 * 0x4000 + (adr.to_int() - 0xC000)
     self.cartridge.prg[index]
-  } else if adr >= (0x8000) {
+  } else if adr >= 0x8000 {
     let index = self.prgBank1 * 0x4000 + (adr.to_int() - 0x8000)
     self.cartridge.prg[index]
-  } else if adr >= (0x6000) {
+  } else if adr >= 0x6000 {
     let index = adr.to_int() - 0x6000
     self.cartridge.sram[index]
   } else {
@@ -400,12 +400,12 @@ impl IMapper for Mapper3 with idx(self : Mapper3, adr : UInt16) -> UInt8 {
 
 ///|
 impl IMapper for Mapper3 with idxSet(self : Mapper3, adr : UInt16, val : UInt8) -> Unit {
-  if adr < (0x2000) {
+  if adr < 0x2000 {
     let index = self.chrBank * 0x2000 + adr.to_int()
     self.cartridge.chr[index] = val
-  } else if adr >= (0x8000) {
+  } else if adr >= 0x8000 {
     self.chrBank = val.to_int() & 3
-  } else if adr >= (0x6000) {
+  } else if adr >= 0x6000 {
     let index = adr.to_int() - 0x6000
     self.cartridge.sram[index] = val
   } else {
