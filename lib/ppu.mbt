@@ -201,7 +201,7 @@ fn initPPU() -> PPU {
 // https://www.nesdev.org/wiki/Mirroring
 
 ///|
-let mirrorLookup = [
+let mirrorLookup : ReadOnlyArray[ReadOnlyArray[Int]] = [
   [0, 0, 1, 1],
   [0, 1, 0, 1],
   [0, 0, 0, 0],
