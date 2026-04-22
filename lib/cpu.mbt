@@ -254,7 +254,7 @@ fn CPU::triggerNMI(self : CPU) -> Unit {
 
 ///|
 fn CPU::triggerIRQ(self : CPU) -> Unit {
-  if not(self.i) {
+  if !self.i {
     self.interrupt = Interrupt::IRQ
   }
 }
@@ -561,7 +561,7 @@ fn CPU::opASL(self : CPU, info : StepInfo) -> Unit {
 
 ///|
 fn CPU::opBCC(self : CPU, info : StepInfo) -> Unit {
-  if not(self.c) {
+  if !self.c {
     self.branch(info)
   }
 }
@@ -607,7 +607,7 @@ fn CPU::opBMI(self : CPU, info : StepInfo) -> Unit {
 
 ///|
 fn CPU::opBNE(self : CPU, info : StepInfo) -> Unit {
-  if not(self.z) {
+  if !self.z {
     self.branch(info)
   }
 }
@@ -616,7 +616,7 @@ fn CPU::opBNE(self : CPU, info : StepInfo) -> Unit {
 
 ///|
 fn CPU::opBPL(self : CPU, info : StepInfo) -> Unit {
-  if not(self.n) {
+  if !self.n {
     self.branch(info)
   }
 }
@@ -635,7 +635,7 @@ fn CPU::opBRK(self : CPU, info : StepInfo) -> Unit {
 
 ///|
 fn CPU::opBVC(self : CPU, info : StepInfo) -> Unit {
-  if not(self.v) {
+  if !self.v {
     self.branch(info)
   }
 }
