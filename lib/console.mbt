@@ -69,7 +69,11 @@ fn NES::step(self : NES, trace_log : Bool) -> Int {
 
 ///|
 fn NES::run_a_while(self : NES, seconds : Double) -> Unit {
-  loop (cpuFrequency * seconds).to_int() {
-    cycles => if cycles > 0 { continue cycles - self.step(false) }
+  for cycles = (cpuFrequency * seconds).to_int() {
+    if cycles > 0 {
+      continue cycles - self.step(false)
+    } else {
+      break
+    }
   }
 }
