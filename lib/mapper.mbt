@@ -146,7 +146,7 @@ impl Show for Mapper2 with output(self, logger) -> Unit {
 }
 
 ///|
-fn newMapper2(self : NES) -> Mapper {
+fn NES::newMapper2(self : NES) -> Mapper {
   let mapper = Mapper2::new(self.cartridge)
   println("mapper: \{mapper}")
   to_mapper(mapper)
@@ -356,7 +356,7 @@ fn Mapper1::new(cartridge : Cartridge) -> Mapper1 {
 }
 
 ///|
-fn newMapper1(self : NES) -> Mapper {
+fn NES::newMapper1(self : NES) -> Mapper {
   let mapper = Mapper1::new(self.cartridge)
   println("mapper1 initialized")
   to_mapper(mapper)
@@ -420,7 +420,7 @@ fn Mapper3::new(cartridge : Cartridge) -> Mapper3 {
 }
 
 ///|
-fn newMapper3(self : NES) -> Mapper {
+fn NES::newMapper3(self : NES) -> Mapper {
   let mapper = Mapper3::new(self.cartridge)
   to_mapper(mapper)
 }
@@ -664,7 +664,7 @@ fn Mapper4::new(cartridge : Cartridge, nes : NES) -> Mapper4 {
 }
 
 ///|
-fn newMapper4(self : NES) -> Mapper {
+fn NES::newMapper4(self : NES) -> Mapper {
   let mapper = Mapper4::new(self.cartridge, self)
   to_mapper(mapper)
 }
@@ -700,7 +700,7 @@ fn Mapper7::new(cartridge : Cartridge) -> Mapper7 {
 }
 
 ///|
-fn newMapper7(self : NES) -> Mapper {
+fn NES::newMapper7(self : NES) -> Mapper {
   let mapper = Mapper7::new(self.cartridge)
   to_mapper(mapper)
 }
