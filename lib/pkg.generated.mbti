@@ -2,29 +2,28 @@
 package "moonbit-community/MoonbitNES/lib"
 
 // Values
-fn buttonDown(Int, Int) -> Unit
+pub fn buttonDown(Int, Int) -> Unit
 
-fn buttonUp(Int, Int) -> Unit
+pub fn buttonUp(Int, Int) -> Unit
 
-fn load_rom(FixedArray[Int]) -> Unit
+pub fn load_rom(FixedArray[Int]) -> Unit
 
-fn load_rom_extern(Int) -> Unit
+pub fn load_rom_extern(Int) -> Unit
 
-fn nestest(FixedArray[Int]) -> Unit
+pub fn nestest(FixedArray[Int]) -> Unit
 
-fn nestest_extern(Int) -> Unit
+pub fn nestest_extern(Int) -> Unit
 
-fn run(Double) -> Unit
+pub fn run(Double) -> Unit
 
-fn run_with_logging(Int) -> Unit
+pub fn run_with_logging(Int) -> Unit
 
 // Errors
 
 // Types and methods
 type APU
 
-type AddressingMode
-impl Eq for AddressingMode
+type AddressingMode derive(Eq)
 
 type CPU
 
@@ -70,8 +69,7 @@ type Picture
 
 type Pulse
 
-type StepInfo
-impl Default for StepInfo
+type StepInfo derive(Default)
 
 type Triangle
 
