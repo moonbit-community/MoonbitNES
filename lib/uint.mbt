@@ -8,9 +8,6 @@
 type UInt8 = Byte
 
 ///|
-type UInt32 = UInt
-
-///|
 trait U8 {
   u8(Self) -> UInt8
 }

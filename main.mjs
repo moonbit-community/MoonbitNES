@@ -181,7 +181,7 @@ document.addEventListener('keydown', (event) => { nes_keyboard(buttonDown, event
 document.addEventListener('keyup', (event) => { nes_keyboard(buttonUp, event) });
 
 if (backend == "wasm-gc" || backend == "wasm") {
-    const wasm_binary = `target/${backend}/release/build/lib/lib.wasm`;
+    const wasm_binary = `_build/${backend}/release/build/lib/lib.wasm`;
     const module = await WebAssembly.compileStreaming(fetch(wasm_binary));
 
     if (do_nestest) {
@@ -304,7 +304,7 @@ if (backend == "wasm-gc" || backend == "wasm") {
         });
     }
 } else {
-    const { nestest, load_rom, run, buttonDown, buttonUp, run_with_logging, set_image_data, set_callback } = await import("./target/js/release/build/lib/lib.js");
+    const { nestest, load_rom, run, buttonDown, buttonUp, run_with_logging, set_image_data, set_callback } = await import("./_build/js/release/build/lib/lib.js");
     image = new ImageData(new Uint8ClampedArray(SCREEN_WIDTH * SCREEN_HEIGHT * 4), SCREEN_WIDTH, SCREEN_HEIGHT);
     set_image_data(image.data)
     set_callback(nes_write_audio_sample)

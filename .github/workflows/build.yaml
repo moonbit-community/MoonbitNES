@@ -32,5 +32,12 @@ jobs:
 
             - name: moon build
               run: |
-                moon build --target wasm-gc
-                moon build --target js
+                moon build --target wasm-gc --release
+                moon build --target js --release
+
+            - uses: actions/setup-node@v4
+              with:
+                node-version: 22
+
+            - name: Verify CPU state trace
+              run: node scripts/check-nestest.mjs
