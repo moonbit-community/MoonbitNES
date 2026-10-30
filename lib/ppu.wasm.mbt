@@ -15,6 +15,6 @@ fn nes_write_color(
 ) -> Unit {
   store32(
     offset.val + offset_ * 4,
-    0xFF000000 | blue.lsl(16) | green.lsl(8) | red,
+    0xFF000000 | (blue << 16) | (green << 8) | red,
   )
 }

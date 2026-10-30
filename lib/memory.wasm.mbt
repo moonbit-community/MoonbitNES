@@ -4,7 +4,7 @@ pub extern "wasm" fn malloc(size : Int32) -> Int32 =
 
 ///|
 pub extern "wasm" fn free(position : Int32) =
-  #|(func (param i32) local.get 0 call $moonbit.free)
+  #|(func (param i32) local.get 0 call $moonbit.decref)
 
 ///|
 let offset : Ref[Int32] = { val: 0, }
