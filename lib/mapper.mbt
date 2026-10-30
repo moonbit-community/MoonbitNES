@@ -17,20 +17,22 @@ fn Mapper::step(self : Mapper) -> Unit {
 }
 
 ///|
-fn Mapper::op_get(self : Mapper, adr : UInt16) -> UInt8 {
+#alias("_[_]")
+fn Mapper::get(self : Mapper, adr : UInt16) -> UInt8 {
   (self._idx)(adr)
 }
 
 ///|
-fn Mapper::op_set(self : Mapper, adr : UInt16, val : UInt8) -> Unit {
+#alias("_[_]=_")
+fn Mapper::set(self : Mapper, adr : UInt16, val : UInt8) -> Unit {
   (self._idxSet)(adr, val)
 }
 
 ///|
 trait IMapper {
-  step(Self) -> Unit
-  idx(Self, UInt16) -> UInt8
-  idxSet(Self, UInt16, UInt8) -> Unit
+  fn step(Self) -> Unit
+  fn idx(Self, UInt16) -> UInt8
+  fn idxSet(Self, UInt16, UInt8) -> Unit
 }
 
 // can't write `self: T`
@@ -85,18 +87,18 @@ fn[T : IMapper] to_mapper(m : T) -> Mapper {
 ///|
 struct Mapper2 {
   cartridge : Cartridge
-  prgBanks : Int
-  mut prgBank1 : Int
-  prgBank2 : Int
+  prgBanks : Int32
+  mut prgBank1 : Int32
+  prgBank2 : Int32
 }
 
 ///|
-impl IMapper for Mapper2 with step(self : Mapper2) -> Unit {
+impl IMapper for Mapper2 with fn step(self : Mapper2) -> Unit {
 
 }
 
 ///|
-impl IMapper for Mapper2 with idx(self : Mapper2, adr : UInt16) -> UInt8 {
+impl IMapper for Mapper2 with fn idx(self : Mapper2, adr : UInt16) -> UInt8 {
   if adr >= 0x0000 && adr <= 0x1FFF {
     return self.cartridge.chr[adr.to_int()]
   } else if adr >= 0x6000 && adr <= 0x7FFF {
@@ -113,7 +115,11 @@ impl IMapper for Mapper2 with idx(self : Mapper2, adr : UInt16) -> UInt8 {
 } // should raise exception
 
 ///|
-impl IMapper for Mapper2 with idxSet(self : Mapper2, adr : UInt16, val : UInt8) -> Unit {
+impl IMapper for Mapper2 with fn idxSet(
+  self : Mapper2,
+  adr : UInt16,
+  val : UInt8,
+) -> Unit {
   if adr >= 0x0000 && adr <= 0x1FFF {
     self.cartridge.chr[adr.to_int()] = val // "but most emulators support RAM"
   } else if adr >= 0x6000 && adr <= 0x7FFF {
@@ -128,7 +134,7 @@ fn Mapper2::new(cartridge : Cartridge) -> Mapper2 {
   let prg_len = cartridge.prg.length()
   let prgBanks = prg_len / 0x4000
   println("Mapper2::new: \{prg_len} \{prgBanks}")
-  { cartridge, prgBanks, prgBank1: 0, prgBank2: prgBanks - 1 }
+  { cartridge, prgBanks, prgBank1: 0, prgBank2: prgBanks - 1, }
 }
 
 ///|
@@ -141,7 +147,7 @@ fn Mapper2::to_string(self : Mapper2) -> String {
 }
 
 ///|
-impl Show for Mapper2 with output(self, logger) -> Unit {
+impl Show for Mapper2 with fn output(self, logger) -> Unit {
   logger.write_string(self.to_string())
 }
 
@@ -165,17 +171,17 @@ struct Mapper1 {
   mut prgBank : UInt8
   mut chrBank0 : UInt8
   mut chrBank1 : UInt8
-  prgOffsets : FixedArray[Int] // cnt=2
-  chrOffsets : FixedArray[Int] // cnt=2
+  prgOffsets : FixedArray[Int32] // cnt=2
+  chrOffsets : FixedArray[Int32] // cnt=2
 }
 
 ///|
-impl IMapper for Mapper1 with step(self : Mapper1) -> Unit {
+impl IMapper for Mapper1 with fn step(self : Mapper1) -> Unit {
 
 }
 
 ///|
-impl IMapper for Mapper1 with idx(self : Mapper1, adr : UInt16) -> UInt8 {
+impl IMapper for Mapper1 with fn idx(self : Mapper1, adr : UInt16) -> UInt8 {
   let mut address = adr.to_int()
   if address < 0x2000 {
     let bank = address / 0x1000
@@ -194,7 +200,11 @@ impl IMapper for Mapper1 with idx(self : Mapper1, adr : UInt16) -> UInt8 {
 }
 
 ///|
-impl IMapper for Mapper1 with idxSet(self : Mapper1, adr : UInt16, val : UInt8) -> Unit {
+impl IMapper for Mapper1 with fn idxSet(
+  self : Mapper1,
+  adr : UInt16,
+  val : UInt8,
+) -> Unit {
   let address = adr.to_int()
   if address < 0x2000 {
     let bank = address / 0x1000
@@ -281,7 +291,7 @@ fn Mapper1::writePRGBank(self : Mapper1, value : UInt8) -> Unit {
 }
 
 ///|
-fn Mapper1::prgBankOffset(self : Mapper1, index : Int) -> Int {
+fn Mapper1::prgBankOffset(self : Mapper1, index : Int32) -> Int32 {
   let index = (if index >= 0x80 { index - 0x100 } else { index }) %
     (self.cartridge.prg.length() / 0x4000)
   let offset = index * 0x4000
@@ -293,7 +303,7 @@ fn Mapper1::prgBankOffset(self : Mapper1, index : Int) -> Int {
 }
 
 ///|
-fn Mapper1::chrBankOffset(self : Mapper1, index : Int) -> Int {
+fn Mapper1::chrBankOffset(self : Mapper1, index : Int32) -> Int32 {
   let index = (if index >= 0x80 { index - 0x100 } else { index }) %
     (self.cartridge.chr.length() / 0x1000)
   let offset = index * 0x1000
@@ -369,18 +379,18 @@ fn NES::newMapper1(self : NES) -> Mapper {
 ///|
 struct Mapper3 {
   cartridge : Cartridge
-  mut chrBank : Int
-  mut prgBank1 : Int
-  mut prgBank2 : Int
+  mut chrBank : Int32
+  mut prgBank1 : Int32
+  mut prgBank2 : Int32
 }
 
 ///|
-impl IMapper for Mapper3 with step(self : Mapper3) -> Unit {
+impl IMapper for Mapper3 with fn step(self : Mapper3) -> Unit {
 
 }
 
 ///|
-impl IMapper for Mapper3 with idx(self : Mapper3, adr : UInt16) -> UInt8 {
+impl IMapper for Mapper3 with fn idx(self : Mapper3, adr : UInt16) -> UInt8 {
   if adr < 0x2000 {
     let index = self.chrBank * 0x2000 + adr.to_int()
     self.cartridge.chr[index]
@@ -399,7 +409,11 @@ impl IMapper for Mapper3 with idx(self : Mapper3, adr : UInt16) -> UInt8 {
 }
 
 ///|
-impl IMapper for Mapper3 with idxSet(self : Mapper3, adr : UInt16, val : UInt8) -> Unit {
+impl IMapper for Mapper3 with fn idxSet(
+  self : Mapper3,
+  adr : UInt16,
+  val : UInt8,
+) -> Unit {
   if adr < 0x2000 {
     let index = self.chrBank * 0x2000 + adr.to_int()
     self.cartridge.chr[index] = val
@@ -416,7 +430,7 @@ impl IMapper for Mapper3 with idxSet(self : Mapper3, adr : UInt16, val : UInt8) 
 ///|
 fn Mapper3::new(cartridge : Cartridge) -> Mapper3 {
   let prgBanks = cartridge.prg.length() / 0x4000
-  { cartridge, chrBank: 0, prgBank1: 0, prgBank2: prgBanks - 1 }
+  { cartridge, chrBank: 0, prgBank1: 0, prgBank2: prgBanks - 1, }
 }
 
 ///|
@@ -438,15 +452,15 @@ struct Mapper4 {
   registers : FixedArray[UInt8] // len=8
   mut prgMode : UInt8
   mut chrMode : UInt8
-  prgOffsets : FixedArray[Int] // len=4
-  chrOffsets : FixedArray[Int] // len=8
+  prgOffsets : FixedArray[Int32] // len=4
+  chrOffsets : FixedArray[Int32] // len=8
   mut reload : UInt8
   mut counter : UInt8
   mut irqEnable : Bool
 }
 
 ///|
-impl IMapper for Mapper4 with step(self : Mapper4) -> Unit {
+impl IMapper for Mapper4 with fn step(self : Mapper4) -> Unit {
   let ppu = self.console.ppu
   if ppu.cycle != 280 { // TODO: this *should* be 260
     return
@@ -461,7 +475,7 @@ impl IMapper for Mapper4 with step(self : Mapper4) -> Unit {
 }
 
 ///|
-impl IMapper for Mapper4 with idx(self : Mapper4, adr : UInt16) -> UInt8 {
+impl IMapper for Mapper4 with fn idx(self : Mapper4, adr : UInt16) -> UInt8 {
   let mut address = adr.to_int()
   if address < 0x2000 {
     let bank = address / 0x0400
@@ -481,7 +495,11 @@ impl IMapper for Mapper4 with idx(self : Mapper4, adr : UInt16) -> UInt8 {
 }
 
 ///|
-impl IMapper for Mapper4 with idxSet(self : Mapper4, adr : UInt16, val : UInt8) -> Unit {
+impl IMapper for Mapper4 with fn idxSet(
+  self : Mapper4,
+  adr : UInt16,
+  val : UInt8,
+) -> Unit {
   let address = adr.to_int()
   if address < 0x2000 {
     let bank = address / 0x0400
@@ -578,7 +596,7 @@ fn Mapper4::writeIRQEnable(self : Mapper4, value : UInt8) -> Unit {
 }
 
 ///|
-fn Mapper4::prgBankOffset(self : Mapper4, index : Int) -> Int {
+fn Mapper4::prgBankOffset(self : Mapper4, index : Int32) -> Int32 {
   let index = (if index >= 0x80 { index - 0x100 } else { index }) %
     (self.cartridge.prg.length() / 0x2000)
   let offset = index * 0x2000
@@ -590,7 +608,7 @@ fn Mapper4::prgBankOffset(self : Mapper4, index : Int) -> Int {
 }
 
 ///|
-fn Mapper4::chrBankOffset(self : Mapper4, index : Int) -> Int {
+fn Mapper4::chrBankOffset(self : Mapper4, index : Int32) -> Int32 {
   let index = (if index >= 0x80 { index - 0x100 } else { index }) %
     (self.cartridge.chr.length() / 0x0400)
   let offset = index * 0x0400
@@ -676,27 +694,31 @@ fn NES::newMapper4(self : NES) -> Mapper {
 ///|
 struct Mapper7 {
   cartridge : Cartridge
-  prgBank : Int
+  prgBank : Int32
 }
 
 ///|
-impl IMapper for Mapper7 with step(self : Mapper7) -> Unit {
+impl IMapper for Mapper7 with fn step(self : Mapper7) -> Unit {
 
 }
 
 ///|
-impl IMapper for Mapper7 with idx(self : Mapper7, adr : UInt16) -> UInt8 {
+impl IMapper for Mapper7 with fn idx(self : Mapper7, adr : UInt16) -> UInt8 {
   0
 }
 
 ///|
-impl IMapper for Mapper7 with idxSet(self : Mapper7, adr : UInt16, val : UInt8) -> Unit {
+impl IMapper for Mapper7 with fn idxSet(
+  self : Mapper7,
+  adr : UInt16,
+  val : UInt8,
+) -> Unit {
 
 }
 
 ///|
 fn Mapper7::new(cartridge : Cartridge) -> Mapper7 {
-  { cartridge, prgBank: 0 }
+  { cartridge, prgBank: 0, }
 }
 
 ///|

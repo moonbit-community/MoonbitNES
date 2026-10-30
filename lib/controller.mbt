@@ -5,13 +5,13 @@
 ///|
 struct Controller {
   mut buttons : FixedArray[Bool]
-  mut index : Int
+  mut index : Int32
   mut strobe : UInt8
 }
 
 ///|
 fn Controller::new() -> Controller {
-  { buttons: FixedArray::make(8, false), index: 0, strobe: 0 }
+  { buttons: FixedArray::make(8, false), index: 0, strobe: 0, }
 }
 
 // nim and go has different logic?

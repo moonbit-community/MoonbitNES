@@ -9,7 +9,7 @@ struct PPUMemory {
 
 ///|
 fn PPUMemory::new() -> PPUMemory {
-  { nes: None }
+  { nes: None, }
 }
 
 ///|
@@ -18,8 +18,8 @@ struct PPU {
   mut nes : NES? // just like CPUMemory
 
   // Current state
-  mut cycle : Int // 0-340 current "column"
-  mut scanLine : Int // 0-261, current "row". 0-239=visible, 240=post, 241-260=vblank, 261=pre
+  mut cycle : Int32 // 0-340 current "column"
+  mut scanLine : Int32 // 0-261, current "row". 0-239=visible, 240=post, 241-260=vblank, 261=pre
   mut frame : Int64 // frame counter
 
   // storage variables
@@ -51,7 +51,7 @@ struct PPU {
   mut tileData : Int64
 
   // sprites temporary variables
-  mut spriteCount : Int
+  mut spriteCount : Int32
   mut spritePatterns : FixedArray[UInt32] // len=8
   mut spritePositions : FixedArray[UInt8] // len=8
   mut spritePriorities : FixedArray[UInt8] // len=8
@@ -87,7 +87,7 @@ struct PPU {
 }
 
 ///|
-struct Color(Int) // 0xrrggbb
+struct Color(Int32) // 0xrrggbb
 
 // type alias will be better
 
@@ -97,7 +97,7 @@ struct Picture {
 }
 
 ///|
-let resolution : (Int, Int) = (256, 240)
+let resolution : (Int32, Int32) = (256, 240)
 
 ///|
 fn Picture::new() -> Picture {
@@ -201,7 +201,7 @@ fn initPPU() -> PPU {
 // https://www.nesdev.org/wiki/Mirroring
 
 ///|
-let mirrorLookup : ReadOnlyArray[ReadOnlyArray[Int]] = [
+let mirrorLookup : ReadOnlyArray[ReadOnlyArray[Int32]] = [
   [0, 0, 1, 1],
   [0, 1, 0, 1],
   [0, 0, 0, 0],
@@ -221,7 +221,7 @@ fn mirrorAddress(mode : UInt8, adr : UInt16) -> UInt16 {
 }
 
 ///|
-fn paletteAdr(adr : UInt16) -> Int {
+fn paletteAdr(adr : UInt16) -> Int32 {
   if adr >= 16 && adr.to_int() % 4 == 0 {
     adr.to_int() - 16
   } else {
@@ -273,7 +273,8 @@ fn PPU::writePalette(self : PPU, adr : UInt16, val : UInt8) -> Unit {
 // $3F00-3FFF is not configurable, always mapped to the internal palette control.
 
 ///|
-fn PPUMemory::op_get(self : PPUMemory, adr : UInt16) -> UInt8 {
+#alias("_[_]")
+fn PPUMemory::get(self : PPUMemory, adr : UInt16) -> UInt8 {
   let adr = adr % 0x4000
   let nes = self.nes.unwrap()
   if adr.to_int() >= 0x0000 && adr.to_int() <= 0x1FFF {
@@ -290,7 +291,8 @@ fn PPUMemory::op_get(self : PPUMemory, adr : UInt16) -> UInt8 {
 }
 
 ///|
-fn PPUMemory::op_set(self : PPUMemory, adr : UInt16, val : UInt8) -> Unit {
+#alias("_[_]=_")
+fn PPUMemory::set(self : PPUMemory, adr : UInt16, val : UInt8) -> Unit {
   let adr = adr % 0x4000
   let nes = self.nes.unwrap()
   if adr.to_int() >= 0x0000 && adr.to_int() <= 0x1FFF {
@@ -587,9 +589,9 @@ fn PPU::setVerticalBlank(self : PPU) -> Unit {
       nes_write_color(
         row * resolution.0 + col,
         red=(color.land(0xFF0000).reinterpret_as_uint() >> 16)
-          |> UInt::reinterpret_as_int,
+          |> UInt32::reinterpret_as_int,
         green=(color.land(0xFF00).reinterpret_as_uint() >> 8)
-          |> UInt::reinterpret_as_int,
+          |> UInt32::reinterpret_as_int,
         blue=color & 0xFF,
       )
     }
@@ -633,7 +635,7 @@ fn PPU::fetchAttributeTableByte(self : PPU) -> Unit {
 // address := 0x1000*uint16(table) + uint16(tile)*16 + fineY
 
 ///|
-fn PPU::tileAdr(self : PPU) -> Int {
+fn PPU::tileAdr(self : PPU) -> Int32 {
   let fineY = (self.v >> 12) & 7
   let table = self.flagBackgroundTable
   let tile = self.nameTable
@@ -745,7 +747,7 @@ fn PPU::renderPixel(self : PPU) -> Unit {
 }
 
 ///|
-fn PPU::fetchSpritePattern(self : PPU, i : Int, row : Int) -> UInt32 {
+fn PPU::fetchSpritePattern(self : PPU, i : Int32, row : Int32) -> UInt32 {
   let mut row = row
   let mut tile = self.oamData[i * 4 + 1]
   let attributes = self.oamData[i * 4 + 2]

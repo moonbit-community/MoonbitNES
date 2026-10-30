@@ -9,7 +9,7 @@ type UInt8 = Byte
 
 ///|
 trait U8 {
-  u8(Self) -> UInt8
+  fn u8(Self) -> UInt8
 }
 
 ///|
@@ -19,7 +19,7 @@ fn[T : U8] to_u8(t : T) -> UInt8 {
 
 ///|
 trait U16 {
-  u16(Self) -> UInt16
+  fn u16(Self) -> UInt16
 }
 
 ///|
@@ -29,7 +29,7 @@ fn[T : U16] to_u16(t : T) -> UInt16 {
 
 ///|
 trait U32 {
-  u32(Self) -> UInt32
+  fn u32(Self) -> UInt32
 }
 
 ///|
@@ -39,7 +39,7 @@ fn[T : U32] to_u32(t : T) -> UInt32 {
 
 ///|
 trait U64 {
-  u64(Self) -> UInt64
+  fn u64(Self) -> UInt64
 }
 
 ///|
@@ -48,27 +48,27 @@ fn[T : U64] to_u64(t : T) -> UInt64 {
 }
 
 ///|
-impl U8 for Int with u8(i : Int) -> UInt8 {
+impl U8 for Int32 with fn u8(i : Int32) -> UInt8 {
   i.to_byte()
 }
 
 ///|
-impl U16 for Int with u16(i : Int) -> UInt16 {
+impl U16 for Int32 with fn u16(i : Int32) -> UInt16 {
   i.to_uint16()
 }
 
 ///|
-impl U32 for Int with u32(i : Int) -> UInt32 {
+impl U32 for Int32 with fn u32(i : Int32) -> UInt32 {
   i.reinterpret_as_uint()
 }
 
 ///|
-impl U64 for Int64 with u64(i : Int64) -> UInt64 {
+impl U64 for Int64 with fn u64(i : Int64) -> UInt64 {
   i.reinterpret_as_uint64()
 }
 
 ///|
-impl U8 for Bool with u8(self : Bool) -> UInt8 {
+impl U8 for Bool with fn u8(self : Bool) -> UInt8 {
   if self {
     1
   } else {
@@ -85,42 +85,42 @@ fn UInt8::formatHex(self : UInt8) -> String {
 }
 
 ///|
-impl U8 for UInt16 with u8(self : UInt16) -> UInt8 {
+impl U8 for UInt16 with fn u8(self : UInt16) -> UInt8 {
   self.to_byte()
 }
 
 ///|
-impl U8 for UInt32 with u8(self : UInt32) -> UInt8 {
+impl U8 for UInt32 with fn u8(self : UInt32) -> UInt8 {
   self.to_byte()
 }
 
 ///|
-impl U16 for UInt8 with u16(self : UInt8) -> UInt16 {
+impl U16 for UInt8 with fn u16(self : UInt8) -> UInt16 {
   self.to_uint16()
 }
 
 ///|
-impl U32 for UInt64 with u32(self : UInt64) -> UInt32 {
+impl U32 for UInt64 with fn u32(self : UInt64) -> UInt32 {
   self.to_uint()
 }
 
 ///|
-impl U64 for UInt32 with u64(self : UInt32) -> UInt64 {
+impl U64 for UInt32 with fn u64(self : UInt32) -> UInt64 {
   self.to_uint64()
 }
 
 ///|
-impl U64 for UInt8 with u64(self : UInt8) -> UInt64 {
+impl U64 for UInt8 with fn u64(self : UInt8) -> UInt64 {
   self.to_uint64()
 }
 
 ///|
-fn UInt8::bit(self : UInt8, bit : Int) -> Bool {
+fn UInt8::bit(self : UInt8, bit : Int32) -> Bool {
   ((self >> bit) & 1) == 1
 }
 
 ///|
-fn to_hex_digit(i : Int) -> String {
+fn to_hex_digit(i : Int32) -> String {
   let s = "0123456789ABCDEF"
   s[i].unsafe_to_char().to_string()
 }
@@ -161,7 +161,7 @@ fn MemoryReader::readUInt8(self : MemoryReader) -> UInt8 {
 ///|
 fn MemoryReader::readUInt8Array(
   self : MemoryReader,
-  cnt : Int,
+  cnt : Int32,
 ) -> FixedArray[UInt8] {
   let result = FixedArray::makei(cnt, index => {
     self.data[self.pos + index] |> to_u8

@@ -11,11 +11,11 @@ struct NES {
   controllers : FixedArray[Controller]
   mut mapper : Mapper?
   ram : FixedArray[UInt8] // 2048 bytes
-  mut step_cnt : Int
+  mut step_cnt : Int32
 }
 
 ///|
-fn NES::new(data : FixedArray[Int]) -> NES {
+fn NES::new(data : FixedArray[Int32]) -> NES {
   let controllers : FixedArray[_] = [Controller::new(), Controller::new()]
   let nes : NES = {
     cpu: initCPU(),
@@ -47,7 +47,7 @@ fn NES::reset(self : NES) -> Unit {
 }
 
 ///|
-fn NES::step(self : NES, trace_log : Bool) -> Int {
+fn NES::step(self : NES, trace_log : Bool) -> Int32 {
   let step_cnt = self.step_cnt
   //log_trace("step: \(step_cnt)")
   let cpuCycles = self.cpu.step(trace_log)

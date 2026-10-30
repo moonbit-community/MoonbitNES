@@ -3,7 +3,7 @@
 // Copyright (c) 2024 Liu Rujia, International Digital Economy Academy
 
 ///|
-let callback : Ref[(Double) -> Unit] = { val: fn(_d) {  } }
+let callback : Ref[(Double) -> Unit] = { val: fn(_d) {  }, }
 
 ///|
 pub fn set_callback(nes_write_audio_sample : (Double) -> Unit) -> Unit {

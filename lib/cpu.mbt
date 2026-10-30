@@ -12,7 +12,7 @@ struct CPUMemory {
 
 ///|
 fn CPUMemory::new() -> CPUMemory {
-  { nes: None }
+  { nes: None, }
 }
 
 ///|
@@ -43,7 +43,7 @@ struct CPU {
   mut n : Bool // negative flag
   // other
   mut interrupt : Interrupt // interrupt type to perform
-  mut stall : Int // number of cycles to stall
+  mut stall : Int32 // number of cycles to stall
 }
 
 // constructors must be capitalized
@@ -70,12 +70,12 @@ enum AddressingMode {
 } derive(Eq)
 
 ///|
-impl Default for AddressingMode with default() -> AddressingMode {
+impl Default for AddressingMode with fn default() -> AddressingMode {
   Absolute
 }
 
 ///|
-fn addressingMode(mode : Int) -> AddressingMode {
+fn addressingMode(mode : Int32) -> AddressingMode {
   match mode {
     0 => Absolute
     1 => AbsoluteX
@@ -94,7 +94,7 @@ fn addressingMode(mode : Int) -> AddressingMode {
 }
 
 ///|
-fn AddressingMode::to_int(self : AddressingMode) -> Int {
+fn AddressingMode::to_int(self : AddressingMode) -> Int32 {
   match self {
     Absolute => 0
     AbsoluteX => 1
@@ -122,7 +122,8 @@ struct StepInfo {
 } derive(Default)
 
 ///|
-fn CPUMemory::op_get(self : CPUMemory, adr : UInt16) -> UInt8 {
+#alias("_[_]")
+fn CPUMemory::get(self : CPUMemory, adr : UInt16) -> UInt8 {
   let n = self.nes.unwrap()
   if adr.to_int() >= 0x0000 && adr.to_int() <= 0x1FFF {
     n.ram[adr.to_int() % 0x0800]
@@ -145,7 +146,8 @@ fn CPUMemory::op_get(self : CPUMemory, adr : UInt16) -> UInt8 {
 }
 
 ///|
-fn CPUMemory::op_set(self : CPUMemory, adr : UInt16, val : UInt8) -> Unit {
+#alias("_[_]=_")
+fn CPUMemory::set(self : CPUMemory, adr : UInt16, val : UInt8) -> Unit {
   let n = self.nes.unwrap()
   if adr.to_int() >= 0x0000 && adr.to_int() <= 0x1FFF {
     // let addr = adr._
@@ -385,7 +387,7 @@ fn CPU::formatAssembly(self : CPU) -> String {
 }
 
 ///|
-fn isSpecialOpcode(op : Int) -> Bool {
+fn isSpecialOpcode(op : Int32) -> Bool {
   instructionUnofficial[op] == 1
 }
 
@@ -448,7 +450,7 @@ fn CPU::formatInstructionWithMesen2Extended(self : CPU) -> String {
 }
 
 ///|
-fn CPU::formatMemoryDump(self : CPU, base : UInt16, cnt : Int) -> String {
+fn CPU::formatMemoryDump(self : CPU, base : UInt16, cnt : Int32) -> String {
   for i = 0, ret = ""
       i < cnt
       i = i + 1, ret = ret + self.mem[base + (i |> to_u16)].formatHex() + " " {
@@ -1446,7 +1448,7 @@ let instructionNames : FixedArray[String] = [
 ]
 
 ///|
-let instructionModes : FixedArray[Int] = [ // Addressing modes
+let instructionModes : FixedArray[Int32] = [ // Addressing modes
   5, 6, 5, 6, 10, 10, 10, 10, 5, 4, 3, 4, 0, 0, 0, 0, 9, 8, 5, 8, 11, 11, 11, 11,
   5, 2, 5, 2, 1, 1, 1, 1, 0, 6, 5, 6, 10, 10, 10, 10, 5, 4, 3, 4, 0, 0, 0, 0, 9,
   8, 5, 8, 11, 11, 11, 11, 5, 2, 5, 2, 1, 1, 1, 1, 5, 6, 5, 6, 10, 10, 10, 10, 5,
@@ -1461,7 +1463,7 @@ let instructionModes : FixedArray[Int] = [ // Addressing modes
 ]
 
 ///|
-let instructionSizes : FixedArray[Int] = [ // Size in bytes
+let instructionSizes : FixedArray[Int32] = [ // Size in bytes
   1, 2, 0, 2, 2, 2, 2, 2, 1, 2, 1, 0, 3, 3, 3, 3, 2, 2, 0, 2, 2, 2, 2, 2, 1, 3, 1,
   3, 3, 3, 3, 3, 3, 2, 0, 2, 2, 2, 2, 2, 1, 2, 1, 0, 3, 3, 3, 3, 2, 2, 0, 2, 2, 2,
   2, 2, 1, 3, 1, 3, 3, 3, 3, 3, 1, 2, 0, 2, 2, 2, 2, 2, 1, 2, 1, 0, 3, 3, 3, 3, 2,
@@ -1475,7 +1477,7 @@ let instructionSizes : FixedArray[Int] = [ // Size in bytes
 ]
 
 ///|
-let instructionCycles : FixedArray[Int] = [ // Number of cycles used
+let instructionCycles : FixedArray[Int32] = [ // Number of cycles used
   7, 6, 2, 8, 3, 3, 5, 5, 3, 2, 2, 2, 4, 4, 6, 6, 2, 5, 2, 8, 4, 4, 6, 6, 2, 4, 2,
   7, 4, 4, 7, 7, 6, 6, 2, 8, 3, 3, 5, 5, 4, 2, 2, 2, 4, 4, 6, 6, 2, 5, 2, 8, 4, 4,
   6, 6, 2, 4, 2, 7, 4, 4, 7, 7, 6, 6, 2, 8, 3, 3, 5, 5, 3, 2, 2, 2, 3, 4, 6, 6, 2,
@@ -1489,7 +1491,7 @@ let instructionCycles : FixedArray[Int] = [ // Number of cycles used
 ]
 
 ///|
-let instructionPageCycles : FixedArray[Int] = [ // Cycles used on a page cross
+let instructionPageCycles : FixedArray[Int32] = [ // Cycles used on a page cross
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0,
   0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0,
   0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
@@ -1503,7 +1505,7 @@ let instructionPageCycles : FixedArray[Int] = [ // Cycles used on a page cross
 ]
 
 ///|
-let instructionUnofficial : FixedArray[Int] = [ // 1 if official
+let instructionUnofficial : FixedArray[Int32] = [ // 1 if official
   // 0    1    2    3    4    5    6    7    8    9    A    B    C    D    E    F
   0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 1, //0
    0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1, //1
@@ -1581,7 +1583,7 @@ fn CPU::get_addr(self : CPU, mode : AddressingMode) -> UInt16 {
 }
 
 ///|
-fn CPU::step(self : CPU, trace_log : Bool) -> Int {
+fn CPU::step(self : CPU, trace_log : Bool) -> Int32 {
   if self.stall > 0 {
     if trace_log {
       println("wait for stall" + self.stall.to_string())
@@ -1620,7 +1622,7 @@ fn CPU::step(self : CPU, trace_log : Bool) -> Int {
   }
   self.pc += instructionSizes[opcode.to_int()] |> to_u16
   self.cycles += instructionCycles[opcode.to_int()].to_int64()
-  let info : StepInfo = { address: adr, pc: self.pc, mode }
+  let info : StepInfo = { address: adr, pc: self.pc, mode, }
   instructions[opcode.to_int()](self, info)
   (self.cycles - cycles).to_int()
 }
