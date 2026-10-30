@@ -6,19 +6,19 @@
 
 ///|
 struct MemoryReader {
-  data : FixedArray[Int]
-  mut pos : Int
+  data : FixedArray[Int32]
+  mut pos : Int32
 }
 
 ///|
-fn MemoryReader::new(data : FixedArray[Int]) -> MemoryReader {
-  { data, pos: 0 }
+fn MemoryReader::new(data : FixedArray[Int32]) -> MemoryReader {
+  { data, pos: 0, }
 }
 
 // copied from official example `bytes-buffer`
 
 ///|
-fn bytes_to_int_be(bytes : FixedArray[Int], start : Int) -> Int {
+fn bytes_to_int_be(bytes : FixedArray[Int32], start : Int32) -> Int32 {
   ((bytes[start] & 0xff) << 24) |
   ((bytes[start + 1] & 0xff) << 16) |
   ((bytes[start + 2] & 0xff) << 8) |
@@ -26,7 +26,7 @@ fn bytes_to_int_be(bytes : FixedArray[Int], start : Int) -> Int {
 }
 
 ///|
-fn bytes_to_int_le(bytes : FixedArray[Int], start : Int) -> Int {
+fn bytes_to_int_le(bytes : FixedArray[Int32], start : Int32) -> Int32 {
   ((bytes[start + 3] & 0xff) << 24) |
   ((bytes[start + 2] & 0xff) << 16) |
   ((bytes[start + 1] & 0xff) << 8) |
@@ -36,7 +36,7 @@ fn bytes_to_int_le(bytes : FixedArray[Int], start : Int) -> Int {
 // big endian
 
 ///|
-fn MemoryReader::readIntBE(self : MemoryReader) -> Int {
+fn MemoryReader::readIntBE(self : MemoryReader) -> Int32 {
   self.pos = self.pos + 4
   bytes_to_int_be(self.data, self.pos - 4)
 }
@@ -44,7 +44,7 @@ fn MemoryReader::readIntBE(self : MemoryReader) -> Int {
 // little endian
 
 ///|
-fn MemoryReader::readIntLE(self : MemoryReader) -> Int {
+fn MemoryReader::readIntLE(self : MemoryReader) -> Int32 {
   self.pos = self.pos + 4
   bytes_to_int_le(self.data, self.pos - 4)
 }

@@ -3,16 +3,16 @@
 // Copyright (c) 2024 Liu Rujia, International Digital Economy Academy
 
 ///|
-extern "wasm" fn load8_u(offset : Int) -> Int =
+extern "wasm" fn load8_u(offset : Int32) -> Int32 =
   #|(func (param i32) (result i32) (i32.load8_u (local.get 0)))
 
 ///|
-pub fn nestest_extern(length : Int) -> Unit {
+pub fn nestest_extern(length : Int32) -> Unit {
   nestest(FixedArray::makei(length, load8_u))
 }
 
 ///|
-pub fn load_rom_extern(length : Int) -> Unit {
+pub fn load_rom_extern(length : Int32) -> Unit {
   load_rom(FixedArray::makei(length, load8_u))
 }
 

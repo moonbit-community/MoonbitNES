@@ -34,7 +34,7 @@ let iNESMagic = 0x1A53454E
 
 ///|
 struct INESHeader {
-  magic : Int // iNES magic number
+  magic : Int32 // iNES magic number
   numPRG : UInt8 // number of PRG-ROM banks (16KB each)
   numCHR : UInt8 // number of CHR-ROM banks (8KB each)
   control1 : UInt8 // control bits
@@ -58,7 +58,7 @@ fn MemoryReader::readINESHeader(self : MemoryReader) -> INESHeader {
   println("control2: \{control2})")
   println("numRAM: \{numRAM})")
   let padding = self.readUInt8Array(7)
-  { magic, numPRG, numCHR, control1, control2, numRAM, padding }
+  { magic, numPRG, numCHR, control1, control2, numRAM, padding, }
 }
 
 // http://wiki.nesdev.com/w/index.php/INES
@@ -76,7 +76,7 @@ fn MemoryReader::readINESHeader(self : MemoryReader) -> INESHeader {
 // ++++----- Lower nybble of mapper number
 
 ///|
-fn newCartridge(data : FixedArray[Int]) -> Cartridge {
+fn newCartridge(data : FixedArray[Int32]) -> Cartridge {
   let reader = MemoryReader::new(data)
   let header = reader.readINESHeader()
   if header.magic != iNESMagic {
@@ -126,5 +126,5 @@ fn newCartridge(data : FixedArray[Int]) -> Cartridge {
     reader.readUInt8Array(chr_len)
   }
   let sram : FixedArray[UInt8] = FixedArray::make(0x2000, 0)
-  { prg, chr, sram, mapper, mirror, battery }
+  { prg, chr, sram, mapper, mirror, battery, }
 }

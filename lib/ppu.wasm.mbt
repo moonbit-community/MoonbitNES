@@ -3,15 +3,15 @@
 // Copyright (c) 2024 Liu Rujia, International Digital Economy Academy
 
 ///|
-extern "wasm" fn store32(offset : Int, value : Int) =
+extern "wasm" fn store32(offset : Int32, value : Int32) =
   #|(func (param i32) (param i32) (i32.store (local.get 0) (local.get 1)))
 
 ///|
 fn nes_write_color(
-  offset_ : Int,
-  red~ : Int,
-  green~ : Int,
-  blue~ : Int,
+  offset_ : Int32,
+  red~ : Int32,
+  green~ : Int32,
+  blue~ : Int32,
 ) -> Unit {
   store32(
     offset.val + offset_ * 4,

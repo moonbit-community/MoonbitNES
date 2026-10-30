@@ -10,10 +10,10 @@ struct GlobalState {
 }
 
 ///|
-let gs : GlobalState = { nes: None }
+let gs : GlobalState = { nes: None, }
 
 ///|
-fn formatInt3(i : Int) -> String {
+fn formatInt3(i : Int32) -> String {
   let d1 = if i > 99 { (i / 100).to_string() } else { " " }
   let d2 = if i > 9 { (i / 10 % 10).to_string() } else { " " }
   d1 + d2 + (i % 10).to_string()
@@ -31,7 +31,7 @@ fn NES::formatCycleInfo(self : NES) -> String {
 }
 
 ///|
-pub fn nestest(rom : FixedArray[Int]) -> Unit {
+pub fn nestest(rom : FixedArray[Int32]) -> Unit {
   println("nestest")
   //cart := newCartridge(rom)
   let nes = NES::new(rom)
@@ -57,7 +57,7 @@ pub fn nestest(rom : FixedArray[Int]) -> Unit {
 // get ready for playing!
 
 ///|
-pub fn load_rom(rom : FixedArray[Int]) -> Unit {
+pub fn load_rom(rom : FixedArray[Int32]) -> Unit {
   let nes = NES::new(rom)
   nes.reset()
   gs.nes = Some(nes)
@@ -71,7 +71,7 @@ pub fn run(deltaTime : Double) -> Unit {
 }
 
 ///|
-pub fn run_with_logging(num_instructions : Int) -> Unit {
+pub fn run_with_logging(num_instructions : Int32) -> Unit {
   let nes = gs.nes.unwrap()
   for i = 0; i < num_instructions; i = i + 1 {
     let line = nes.cpu.formatInstructionWithMesen2Extended()
@@ -83,17 +83,17 @@ pub fn run_with_logging(num_instructions : Int) -> Unit {
 // player: 1, 2
 
 ///|
-fn button(player : Int, btn : Int, state : Bool) -> Unit {
+fn button(player : Int32, btn : Int32, state : Bool) -> Unit {
   let nes = gs.nes.unwrap()
   nes.controllers[player - 1].buttons[btn] = state
 }
 
 ///|
-pub fn buttonDown(player : Int, btn : Int) -> Unit {
+pub fn buttonDown(player : Int32, btn : Int32) -> Unit {
   button(player, btn, true)
 }
 
 ///|
-pub fn buttonUp(player : Int, btn : Int) -> Unit {
+pub fn buttonUp(player : Int32, btn : Int32) -> Unit {
   button(player, btn, false)
 }
