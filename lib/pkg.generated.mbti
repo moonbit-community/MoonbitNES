@@ -2,21 +2,27 @@
 package "moonbit-community/MoonbitNES/lib"
 
 // Values
-pub fn buttonDown(Int, Int) -> Unit
+pub fn buttonDown(Int32, Int32) -> Unit
 
-pub fn buttonUp(Int, Int) -> Unit
+pub fn buttonUp(Int32, Int32) -> Unit
 
-pub fn load_rom(FixedArray[Int]) -> Unit
+pub fn free(Int32) -> Unit
 
-pub fn load_rom_extern(Int) -> Unit
+pub fn load_rom(FixedArray[Int32]) -> Unit
 
-pub fn nestest(FixedArray[Int]) -> Unit
+pub fn load_rom_extern(Int32) -> Unit
 
-pub fn nestest_extern(Int) -> Unit
+pub fn malloc(Int32) -> Int32
+
+pub fn nestest(FixedArray[Int32]) -> Unit
+
+pub fn nestest_extern(Int32) -> Unit
 
 pub fn run(Double) -> Unit
 
-pub fn run_with_logging(Int) -> Unit
+pub fn run_with_logging(Int32) -> Unit
+
+pub fn set_offset(Int32) -> Unit
 
 // Errors
 
@@ -24,6 +30,8 @@ pub fn run_with_logging(Int) -> Unit
 type APU
 
 type AddressingMode derive(Eq)
+pub fn AddressingMode::equal(Self, Self) -> Bool
+pub fn AddressingMode::not_equal(Self, Self) -> Bool
 
 type CPU
 
@@ -70,6 +78,7 @@ type Picture
 type Pulse
 
 type StepInfo derive(Default)
+pub fn StepInfo::default() -> Self
 
 type Triangle
 
@@ -85,4 +94,3 @@ trait U32
 trait U64
 
 trait U8
-
